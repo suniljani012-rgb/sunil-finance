@@ -4,16 +4,19 @@ import { Auth } from './components/Auth';
 import { Dashboard } from './components/Dashboard';
 import { Transactions } from './components/Transactions';
 import { StatementParser } from './components/StatementParser';
-import { Reminders } from './components/Reminders';
+import { LoanTracker } from './components/LoanTracker';
+import { PayeeManager } from './components/PayeeManager';
+import { AccountManager } from './components/AccountManager';
+import { HeaderManager } from './components/HeaderManager';
 import { Reports } from './components/Reports';
-import { LayoutDashboard, ReceiptText, Upload, BellRing, FileText, LogOut, Wallet, Smartphone, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, ReceiptText, Upload, Landmark, User, CreditCard, Tag, FileText, LogOut, Wallet, Smartphone, ShieldCheck } from 'lucide-react';
 import './App.css';
 
 const DashboardLayout = () => {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   
-  // PWA Installation prompt helper states
+  // PWA installation states
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstallBtn, setShowInstallBtn] = useState(false);
 
@@ -29,7 +32,7 @@ const DashboardLayout = () => {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    console.log(`User response to PWA install: ${outcome}`);
+    console.log(`User choice PWA: ${outcome}`);
     setDeferredPrompt(null);
     setShowInstallBtn(false);
   };
@@ -57,7 +60,7 @@ const DashboardLayout = () => {
               className={`sidebar-item ${activeTab === 'dashboard' ? 'active' : ''}`}
               style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}
             >
-              <LayoutDashboard size={16} />
+              <LayoutDashboard size={15} />
               <span>Dashboard</span>
             </button>
 
@@ -66,8 +69,8 @@ const DashboardLayout = () => {
               className={`sidebar-item ${activeTab === 'transactions' ? 'active' : ''}`}
               style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}
             >
-              <ReceiptText size={16} />
-              <span>Ledger Table</span>
+              <ReceiptText size={15} />
+              <span>Ledger Book</span>
             </button>
 
             <button
@@ -75,17 +78,44 @@ const DashboardLayout = () => {
               className={`sidebar-item ${activeTab === 'statement' ? 'active' : ''}`}
               style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}
             >
-              <Upload size={16} />
+              <Upload size={15} />
               <span>CSV Uploader</span>
             </button>
 
             <button
-              onClick={() => setActiveTab('reminders')}
-              className={`sidebar-item ${activeTab === 'reminders' ? 'active' : ''}`}
+              onClick={() => setActiveTab('loans')}
+              className={`sidebar-item ${activeTab === 'loans' ? 'active' : ''}`}
               style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}
             >
-              <BellRing size={16} />
-              <span>Reminders</span>
+              <Landmark size={15} />
+              <span>Loans & EMI</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('payees')}
+              className={`sidebar-item ${activeTab === 'payees' ? 'active' : ''}`}
+              style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}
+            >
+              <User size={15} />
+              <span>Payee Contacts</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('accounts')}
+              className={`sidebar-item ${activeTab === 'accounts' ? 'active' : ''}`}
+              style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}
+            >
+              <CreditCard size={15} />
+              <span>Bank Accounts</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('headers')}
+              className={`sidebar-item ${activeTab === 'headers' ? 'active' : ''}`}
+              style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}
+            >
+              <Tag size={15} />
+              <span>Category Heads</span>
             </button>
 
             <button
@@ -93,8 +123,8 @@ const DashboardLayout = () => {
               className={`sidebar-item ${activeTab === 'reports' ? 'active' : ''}`}
               style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}
             >
-              <FileText size={16} />
-              <span>Reports Print</span>
+              <FileText size={15} />
+              <span>Print Reports</span>
             </button>
           </nav>
         </div>
@@ -147,7 +177,10 @@ const DashboardLayout = () => {
         {activeTab === 'dashboard' && <Dashboard setActiveTab={setActiveTab} />}
         {activeTab === 'transactions' && <Transactions />}
         {activeTab === 'statement' && <StatementParser />}
-        {activeTab === 'reminders' && <Reminders />}
+        {activeTab === 'loans' && <LoanTracker />}
+        {activeTab === 'payees' && <PayeeManager />}
+        {activeTab === 'accounts' && <AccountManager />}
+        {activeTab === 'headers' && <HeaderManager />}
         {activeTab === 'reports' && <Reports />}
       </main>
     </div>

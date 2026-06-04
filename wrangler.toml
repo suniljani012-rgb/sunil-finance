@@ -6,5 +6,5 @@ pages_build_output_dir = "dist"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "finance-db"
-database_id = "a094302a-fd6a-4092-934d-7e57705fcf9e" # The user will replace this with their actual database ID after creating it on Cloudflare
+database_name = "sunil"
+database_id = "62969f21-d2f6-4254-a37e-9985f779eab1" # The user will replace this with their actual database ID after creating it on Cloudflare

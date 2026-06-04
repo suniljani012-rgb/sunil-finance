@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Plus, Trash2, Calendar, User, DollarSign, Tag, CheckCircle2, AlertCircle, FileText } from 'lucide-react';
+import { Plus, Trash2, Calendar, User, DollarSign, Tag, Landmark, FileText, Bookmark, CreditCard } from 'lucide-react';
 
 export const Transactions = () => {
   const { fetch } = useAuth();
   
-  // State variables
+  // Data lists
   const [transactions, setTransactions] = useState([]);
+  const [accounts, setAccounts] = useState([]);
+  const [payees, setPayees] = useState([]);
+  const [headers, setHeaders] = useState([]);
+  
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filterType, setFilterType] = useState('all');
@@ -15,24 +19,40 @@ export const Transactions = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [type, setType] = useState('expense');
   const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState('');
+  const [categoryId, setCategoryId] = useState('');
   const [description, setDescription] = useState('');
-  const [person, setPerson] = useState('');
+  const [personId, setPersonId] = useState('');
+  const [accountId, setAccountId] = useState('');
+  const [utrNumber, setUtrNumber] = useState('');
   const [status, setStatus] = useState('paid');
   const [dueDate, setDueDate] = useState('');
   const [submitLoading, setSubmitLoading] = useState(false);
 
   // Repayment form states
-  const [repayTransaction, setRepayTransaction] = useState(null); // transaction object being repaid
+  const [repayTransaction, setRepayTransaction] = useState(null);
   const [repayAmount, setRepayAmount] = useState('');
+  const [repayAccount, setRepayAccount] = useState('');
   const [repayDate, setRepayDate] = useState(new Date().toISOString().split('T')[0]);
   const [repayLoading, setRepayLoading] = useState(false);
 
-  const loadTransactions = async () => {
+  const loadAllData = async () => {
     try {
       setLoading(true);
-      const data = await fetch('/api/transactions');
-      setTransactions(data.transactions);
+      const txData = await fetch('/api/transactions');
+      setTransactions(txData.transactions);
+
+      const accData = await fetch('/api/accounts');
+      setAccounts(accData.accounts);
+      if (accData.accounts.length > 0) {
+        setAccountId(accData.accounts[0].id);
+        setRepayAccount(accData.accounts[0].id);
+      }
+
+      const payeeData = await fetch('/api/payees');
+      setPayees(payeeData.payees);
+
+      const headData = await fetch('/api/headers');
+      setHeaders(headData.headers);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -41,21 +61,26 @@ export const Transactions = () => {
   };
 
   useEffect(() => {
-    loadTransactions();
+    loadAllData();
   }, []);
 
   const handleAddSubmit = async (e) => {
     e.preventDefault();
+    if (!amount || !accountId) return;
     setError('');
     setSubmitLoading(true);
 
     try {
+      const selectedHeader = headers.find(h => h.id === categoryId);
       const payload = {
         type,
         amount: Number(amount),
-        category,
+        category_id: categoryId || null,
+        category: selectedHeader ? selectedHeader.name : 'Uncategorized',
         description,
-        person: (type !== 'income' && type !== 'expense') ? person : '',
+        person_id: personId || null,
+        account_id: accountId,
+        utr_number: utrNumber || '',
         status: (type === 'income' || type === 'expense') ? 'paid' : status,
         due_date: (type !== 'income' && type !== 'expense') ? dueDate : ''
       };
@@ -65,17 +90,16 @@ export const Transactions = () => {
         body: JSON.stringify(payload)
       });
 
-      // Reset form
+      // Reset
       setAmount('');
-      setCategory('');
+      setCategoryId('');
       setDescription('');
-      setPerson('');
-      setStatus('pending');
+      setPersonId('');
+      setUtrNumber('');
+      setStatus('paid');
       setDueDate('');
       setShowAddForm(false);
-      
-      // Reload
-      await loadTransactions();
+      await loadAllData();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -84,10 +108,10 @@ export const Transactions = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this record?")) return;
+    if (!window.confirm("Delete this transaction entry? This will reverse bank account balance adjustments!")) return;
     try {
       await fetch(`/api/transactions/${id}`, { method: 'DELETE' });
-      await loadTransactions();
+      await loadAllData();
     } catch (err) {
       setError(err.message);
     }
@@ -95,7 +119,7 @@ export const Transactions = () => {
 
   const handleRepaySubmit = async (e) => {
     e.preventDefault();
-    if (!repayTransaction || !repayAmount) return;
+    if (!repayTransaction || !repayAmount || !repayAccount) return;
     setError('');
     setRepayLoading(true);
 
@@ -104,13 +128,14 @@ export const Transactions = () => {
         method: 'POST',
         body: JSON.stringify({
           amount: Number(repayAmount),
-          payment_date: repayDate
+          payment_date: repayDate,
+          account_id: repayAccount
         })
       });
 
       setRepayAmount('');
       setRepayTransaction(null);
-      await loadTransactions();
+      await loadAllData();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -118,20 +143,18 @@ export const Transactions = () => {
     }
   };
 
-  // Pre-fill categories based on type for convenience
   const handleTypeChange = (selectedType) => {
     setType(selectedType);
-    if (selectedType === 'income') {
-      setCategory('Salary');
+    const relatedHeaders = headers.filter(h => h.type === (selectedType === 'income' ? 'income' : 'expense'));
+    if (relatedHeaders.length > 0) {
+      setCategoryId(relatedHeaders[0].id);
+    } else {
+      setCategoryId('');
+    }
+    
+    if (selectedType === 'income' || selectedType === 'expense') {
       setStatus('paid');
-    } else if (selectedType === 'expense') {
-      setCategory('Food & Groceries');
-      setStatus('paid');
-    } else if (selectedType.startsWith('loan_')) {
-      setCategory('Personal Loan');
-      setStatus('pending');
-    } else if (selectedType.startsWith('udhar_')) {
-      setCategory('Udhaar');
+    } else {
       setStatus('pending');
     }
   };
@@ -159,33 +182,36 @@ export const Transactions = () => {
     return t.type === filterType;
   });
 
+  // Filter category options based on active selection type
+  const activeHeaders = headers.filter(h => h.type === (type === 'income' ? 'income' : 'expense'));
+
   return (
     <div className="animate-fade-in" style={{ position: 'relative' }}>
       
-      {/* Header controls */}
+      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h2 style={{ fontSize: '28px', fontWeight: '800' }}>Ledger Transactions</h2>
-          <p style={{ color: 'var(--text-secondary)', marginTop: '4px' }}>Add income, expenses, lent/borrowed amounts and repayments.</p>
+          <h2 style={{ fontSize: '28px', fontWeight: '800' }}>Ledger Ledger Book</h2>
+          <p style={{ color: 'var(--text-secondary)', marginTop: '4px' }}>Add deposits, withdrawals, lending agreements and bank references.</p>
         </div>
         
         <button onClick={() => setShowAddForm(true)} className="btn btn-primary">
-          <Plus size={18} /> Record Entry
+          <Plus size={18} /> Record Transaction
         </button>
       </div>
 
       {error && (
-        <div style={{ background: 'rgba(244, 63, 94, 0.1)', color: 'hsl(var(--accent-rose))', padding: '12px 16px', borderRadius: '8px', marginBottom: '24px' }}>
+        <div style={{ background: 'rgba(255, 69, 58, 0.1)', color: 'rgb(var(--apple-red))', padding: '12px 16px', borderRadius: '8px', marginBottom: '24px' }}>
           {error}
         </div>
       )}
 
-      {/* Filter Menu Strip */}
+      {/* Filter strip */}
       <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '12px', marginBottom: '24px', borderBottom: '1px solid var(--border-color)' }}>
         {[
           { id: 'all', label: 'All Entries' },
-          { id: 'income', label: 'Income Only' },
-          { id: 'expense', label: 'Expenses Only' },
+          { id: 'income', label: 'Inflows Only' },
+          { id: 'expense', label: 'Outflows Only' },
           { id: 'loans', label: 'Loans Only' },
           { id: 'udhar', label: 'Udhaar Only' }
         ].map(btn => (
@@ -193,15 +219,15 @@ export const Transactions = () => {
             key={btn.id}
             onClick={() => setFilterType(btn.id)}
             style={{
-              padding: '8px 16px',
+              padding: '6px 14px',
               borderRadius: '20px',
               fontSize: '13px',
               fontWeight: '600',
               cursor: 'pointer',
               border: '1px solid var(--border-color)',
-              background: filterType === btn.id ? 'rgba(99, 102, 241, 0.15)' : 'rgba(12, 18, 37, 0.5)',
+              background: filterType === btn.id ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.01)',
               color: filterType === btn.id ? '#fff' : 'var(--text-secondary)',
-              borderColor: filterType === btn.id ? 'hsl(var(--accent-indigo))' : 'var(--border-color)',
+              borderColor: filterType === btn.id ? 'rgba(255,255,255,0.2)' : 'var(--border-color)',
               outline: 'none',
               transition: 'all var(--transition-fast)'
             }}
@@ -211,139 +237,118 @@ export const Transactions = () => {
         ))}
       </div>
 
-      {/* Transaction List Cards / Table */}
+      {/* Transactions Grid list */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>
-          Loading your financial ledger...
-        </div>
+        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>Loading transactions...</div>
       ) : filteredTransactions.length === 0 ? (
         <div className="glass-card" style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-secondary)' }}>
-          <FileText size={48} style={{ margin: '0 auto 16px auto', opacity: 0.3 }} />
+          <FileText size={40} style={{ margin: '0 auto 16px auto', opacity: 0.2 }} />
           <h3>No records found</h3>
-          <p style={{ fontSize: '14px', marginTop: '4px' }}>Try recording a new income, expense, or loan entry to see it here.</p>
+          <p style={{ fontSize: '13px', marginTop: '4px' }}>Log checking entries, cash notes, or loans to display records.</p>
         </div>
       ) : (
         <div className="glass-card" style={{ padding: '0', overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '800px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '950px' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                <th style={{ padding: '16px 24px', fontSize: '13px', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Details / Person</th>
-                <th style={{ padding: '16px 24px', fontSize: '13px', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Type</th>
-                <th style={{ padding: '16px 24px', fontSize: '13px', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Category</th>
-                <th style={{ padding: '16px 24px', fontSize: '13px', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Total Amount</th>
-                <th style={{ padding: '16px 24px', fontSize: '13px', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Outstanding (Bkaya)</th>
-                <th style={{ padding: '16px 24px', fontSize: '13px', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Due Date</th>
-                <th style={{ padding: '16px 24px', fontSize: '13px', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Status</th>
-                <th style={{ padding: '16px 24px', fontSize: '13px', color: 'var(--text-secondary)', textTransform: 'uppercase', textAlign: 'center' }}>Actions</th>
+                <th style={{ padding: '14px 20px', fontSize: '12px', color: 'var(--text-secondary)' }}>Details / Narration</th>
+                <th style={{ padding: '14px 20px', fontSize: '12px', color: 'var(--text-secondary)' }}>Type</th>
+                <th style={{ padding: '14px 20px', fontSize: '12px', color: 'var(--text-secondary)' }}>Head Category</th>
+                <th style={{ padding: '14px 20px', fontSize: '12px', color: 'var(--text-secondary)' }}>Bank Account</th>
+                <th style={{ padding: '14px 20px', fontSize: '12px', color: 'var(--text-secondary)' }}>Contact / Payee</th>
+                <th style={{ padding: '14px 20px', fontSize: '12px', color: 'var(--text-secondary)' }}>UTR Number</th>
+                <th style={{ padding: '14px 20px', fontSize: '12px', color: 'var(--text-secondary)' }}>Outstanding (Bkaya)</th>
+                <th style={{ padding: '14px 20px', fontSize: '12px', color: 'var(--text-secondary)' }}>Due Date</th>
+                <th style={{ padding: '14px 20px', fontSize: '12px', color: 'var(--text-secondary)' }}>Status</th>
+                <th style={{ padding: '14px 20px', fontSize: '12px', color: 'var(--text-secondary)', textAlign: 'center' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredTransactions.map((tx) => {
-                const isLoanOrUdhar = tx.type.startsWith('loan_') || tx.type.startsWith('udhar_');
-                const outstanding = isLoanOrUdhar ? tx.amount - tx.repaid_amount : 0;
+              {filteredTransactions.map(tx => {
+                const isDebt = tx.type.startsWith('loan_') || tx.type.startsWith('udhar_');
+                const outstanding = isDebt ? tx.amount - tx.repaid_amount : 0;
 
                 return (
-                  <tr key={tx.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.2s' }} className="table-row-hover">
-                    {/* Details / Person Name */}
-                    <td style={{ padding: '18px 24px' }}>
-                      <div style={{ fontWeight: '700', color: '#fff', fontSize: '15px' }}>
-                        {tx.description || tx.category}
-                      </div>
-                      {isLoanOrUdhar && tx.person && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                          <User size={12} /> {tx.person}
+                  <tr key={tx.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }} className="table-row-hover">
+                    {/* Narration */}
+                    <td style={{ padding: '14px 20px' }}>
+                      <div style={{ fontWeight: '700', color: '#fff', fontSize: '14px' }}>{tx.description || tx.category}</div>
+                      {tx.loan_name && (
+                        <div style={{ fontSize: '11px', color: 'rgb(var(--apple-blue))', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '3px' }}>
+                          <Bookmark size={11} /> Linked Loan: {tx.loan_name} {tx.emi_number ? `(EMI #${tx.emi_number})` : ''}
                         </div>
                       )}
                     </td>
 
-                    {/* Badge type */}
-                    <td style={{ padding: '18px 24px' }}>
+                    {/* Type badge */}
+                    <td style={{ padding: '14px 20px' }}>
                       <span className={`badge ${getBadgeClass(tx.type)}`}>
                         {formatTxType(tx.type)}
                       </span>
                     </td>
 
-                    {/* Category */}
-                    <td style={{ padding: '18px 24px', fontSize: '14px', color: 'var(--text-secondary)' }}>
-                      {tx.category}
+                    {/* Category Head */}
+                    <td style={{ padding: '14px 20px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                      {tx.category_name}
                     </td>
 
-                    {/* Amount */}
-                    <td style={{ padding: '18px 24px', fontWeight: '700', color: '#fff', fontSize: '15px' }}>
-                      ₹{tx.amount.toLocaleString('en-IN')}
+                    {/* Account */}
+                    <td style={{ padding: '14px 20px', fontSize: '13px', color: '#fff', fontWeight: '500' }}>
+                      {tx.account_name}
                     </td>
 
-                    {/* Outstanding (Bkaya) */}
-                    <td style={{ padding: '18px 24px', fontSize: '14px' }}>
-                      {isLoanOrUdhar ? (
+                    {/* Payee contact */}
+                    <td style={{ padding: '14px 20px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                      {tx.payee_name || <span style={{ color: 'var(--text-muted)' }}>-</span>}
+                    </td>
+
+                    {/* UTR reference */}
+                    <td style={{ padding: '14px 20px', fontSize: '12px', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
+                      {tx.utr_number || <span style={{ color: 'var(--text-muted)' }}>-</span>}
+                    </td>
+
+                    {/* Outstanding bkaya */}
+                    <td style={{ padding: '14px 20px', fontSize: '13px' }}>
+                      {isDebt ? (
                         outstanding > 0 ? (
-                          <span style={{ color: 'hsl(var(--accent-rose))', fontWeight: '700' }}>
-                            ₹{outstanding.toLocaleString('en-IN')} pending
-                          </span>
+                          <span style={{ color: 'rgb(var(--apple-red))', fontWeight: '700' }}>₹{outstanding.toLocaleString('en-IN')} pending</span>
                         ) : (
-                          <span style={{ color: 'hsl(var(--accent-emerald))', fontWeight: '600' }}>
-                            Settled
-                          </span>
+                          <span style={{ color: 'rgb(var(--apple-green))', fontWeight: '600' }}>Settled</span>
                         )
                       ) : (
                         <span style={{ color: 'var(--text-muted)' }}>-</span>
                       )}
                     </td>
 
-                    {/* Due Date */}
-                    <td style={{ padding: '18px 24px', fontSize: '13px', color: 'var(--text-secondary)' }}>
-                      {tx.due_date ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <Calendar size={13} /> {tx.due_date}
-                        </div>
-                      ) : (
-                        <span style={{ color: 'var(--text-muted)' }}>-</span>
-                      )}
+                    {/* Due date */}
+                    <td style={{ padding: '14px 20px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                      {tx.due_date ? tx.due_date : <span style={{ color: 'var(--text-muted)' }}>-</span>}
                     </td>
 
                     {/* Status */}
-                    <td style={{ padding: '18px 24px' }}>
+                    <td style={{ padding: '14px 20px' }}>
                       <span className={`badge ${tx.status === 'paid' ? 'badge-paid' : 'badge-pending'}`}>
                         {tx.status === 'paid' ? 'Settled' : 'Pending'}
                       </span>
                     </td>
 
                     {/* Action buttons */}
-                    <td style={{ padding: '18px 24px', textAlign: 'center' }}>
+                    <td style={{ padding: '14px 20px', textAlign: 'center' }}>
                       <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                        {isLoanOrUdhar && tx.status === 'pending' && (
+                        {isDebt && tx.status === 'pending' && (
                           <button
-                            onClick={() => setRepayTransaction(tx)}
-                            style={{
-                              padding: '6px 12px',
-                              borderRadius: '6px',
-                              background: 'rgba(16, 185, 129, 0.1)',
-                              border: '1px solid rgba(16, 185, 129, 0.2)',
-                              color: 'hsl(var(--accent-emerald))',
-                              fontSize: '12px',
-                              fontWeight: '600',
-                              cursor: 'pointer',
-                              outline: 'none'
+                            onClick={() => {
+                              setRepayTransaction(tx);
+                              setRepayAmount(outstanding);
                             }}
+                            className="btn"
+                            style={{ padding: '4px 8px', fontSize: '11px', background: 'rgba(48,209,88,0.1)', color: 'rgb(var(--apple-green))', border: '1px solid rgba(48,209,88,0.15)' }}
                           >
                             Pay/Repay
                           </button>
                         )}
-                        <button
-                          onClick={() => handleDelete(tx.id)}
-                          style={{
-                            padding: '6px',
-                            borderRadius: '6px',
-                            background: 'rgba(244, 63, 94, 0.1)',
-                            border: '1px solid rgba(244, 63, 94, 0.15)',
-                            color: 'hsl(var(--accent-rose))',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center'
-                          }}
-                        >
-                          <Trash2 size={14} />
+                        <button onClick={() => handleDelete(tx.id)} style={{ padding: '6px', background: 'rgba(255,69,58,0.08)', border: 'none', borderRadius: '6px', color: 'rgb(var(--apple-red))', cursor: 'pointer' }}>
+                          <Trash2 size={13} />
                         </button>
                       </div>
                     </td>
@@ -355,7 +360,7 @@ export const Transactions = () => {
         </div>
       )}
 
-      {/* Record Entry Modal overlay */}
+      {/* Record transaction modal */}
       {showAddForm && (
         <div style={{
           position: 'fixed', top: '0', left: '0', right: '0', bottom: '0',
@@ -363,18 +368,13 @@ export const Transactions = () => {
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px'
         }}>
           <div className="glass-card animate-scale-in" style={{ width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h3 style={{ marginBottom: '20px', fontSize: '20px' }}>Record New Financial Entry</h3>
+            <h3 style={{ marginBottom: '20px', fontSize: '20px' }}>Record Financial Entry</h3>
             
             <form onSubmit={handleAddSubmit}>
-              {/* Type Select */}
+              {/* Type selector */}
               <div className="input-group">
                 <label className="input-label">Entry Type</label>
-                <select
-                  className="input-field"
-                  value={type}
-                  onChange={(e) => handleTypeChange(e.target.value)}
-                  style={{ width: '100%' }}
-                >
+                <select className="input-field" value={type} onChange={e => handleTypeChange(e.target.value)} style={{ width: '100%' }}>
                   <option value="expense">Expense (Outflow)</option>
                   <option value="income">Income (Inflow)</option>
                   <option value="loan_given">Lent Money / Loan Given (Outflow)</option>
@@ -384,109 +384,77 @@ export const Transactions = () => {
                 </select>
               </div>
 
-              {/* Amount input */}
-              <div className="input-group">
-                <label className="input-label">Amount (₹)</label>
-                <div style={{ position: 'relative' }}>
-                  <DollarSign size={16} style={{ position: 'absolute', left: '14px', top: '15px', color: 'var(--text-muted)' }} />
-                  <input
-                    type="number"
-                    required
-                    min={1}
-                    placeholder="Enter amount"
-                    className="input-field"
-                    style={{ paddingLeft: '36px', width: '100%' }}
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* Category input */}
-              <div className="input-group">
-                <label className="input-label">Category</label>
-                <div style={{ position: 'relative' }}>
-                  <Tag size={16} style={{ position: 'absolute', left: '14px', top: '15px', color: 'var(--text-muted)' }} />
-                  <input
-                    type="text"
-                    required
-                    placeholder="Salary, Rent, Groceries, Shopping, Travel..."
-                    className="input-field"
-                    style={{ paddingLeft: '36px', width: '100%' }}
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* Person Name (for Loan/Udhaar) */}
-              {(type.startsWith('loan_') || type.startsWith('udhar_')) && (
+              {/* Amount & Account selection */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '12px' }}>
                 <div className="input-group">
-                  <label className="input-label">Person Name</label>
-                  <div style={{ position: 'relative' }}>
-                    <User size={16} style={{ position: 'absolute', left: '14px', top: '15px', color: 'var(--text-muted)' }} />
-                    <input
-                      type="text"
-                      required
-                      placeholder="Enter contact person name"
-                      className="input-field"
-                      style={{ paddingLeft: '36px', width: '100%' }}
-                      value={person}
-                      onChange={(e) => setPerson(e.target.value)}
-                    />
-                  </div>
+                  <label className="input-label">Amount (₹)</label>
+                  <input type="number" required placeholder="0.00" min={1} className="input-field" value={amount} onChange={e => setAmount(e.target.value)} />
                 </div>
-              )}
-
-              {/* Due Date (for Loan/Udhaar) */}
-              {(type.startsWith('loan_') || type.startsWith('udhar_')) && (
                 <div className="input-group">
-                  <label className="input-label">Repayment Due Date (Optional)</label>
-                  <div style={{ position: 'relative' }}>
-                    <Calendar size={16} style={{ position: 'absolute', left: '14px', top: '15px', color: 'var(--text-muted)' }} />
-                    <input
-                      type="date"
-                      className="input-field"
-                      style={{ paddingLeft: '36px', width: '100%' }}
-                      value={dueDate}
-                      onChange={(e) => setDueDate(e.target.value)}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Initial Status (for Loan/Udhaar) */}
-              {(type.startsWith('loan_') || type.startsWith('udhar_')) && (
-                <div className="input-group">
-                  <label className="input-label">Initial Status</label>
-                  <select
-                    className="input-field"
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                    style={{ width: '100%' }}
-                  >
-                    <option value="pending">Pending (Unsettled / Outstanding)</option>
-                    <option value="paid">Fully Paid (Settled Immediately)</option>
+                  <label className="input-label">Payment Account</label>
+                  <select required className="input-field" value={accountId} onChange={e => setAccountId(e.target.value)}>
+                    <option value="">Select Account</option>
+                    {accounts.map(acc => (
+                      <option key={acc.id} value={acc.id}>{acc.name} (Balance: ₹{acc.balance.toLocaleString('en-IN')})</option>
+                    ))}
                   </select>
+                </div>
+              </div>
+
+              {/* Category selector */}
+              <div className="input-group">
+                <label className="input-label">Category Head</label>
+                <select required className="input-field" value={categoryId} onChange={e => setCategoryId(e.target.value)} style={{ width: '100%' }}>
+                  <option value="">Select Head Category</option>
+                  {activeHeaders.map(h => (
+                    <option key={h.id} value={h.id}>{h.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Payee contact selector */}
+              <div className="input-group">
+                <label className="input-label">Payee / Contact (Optional)</label>
+                <select className="input-field" value={personId} onChange={e => setPersonId(e.target.value)} style={{ width: '100%' }}>
+                  <option value="">None</option>
+                  {payees.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* UTR reference */}
+              <div className="input-group">
+                <label className="input-label">Bank Transaction UTR / Ref Number</label>
+                <input type="text" placeholder="12-digit UTR reference ID" className="input-field" value={utrNumber} onChange={e => setUtrNumber(e.target.value)} style={{ width: '100%' }} />
+              </div>
+
+              {/* Debt configurations (due dates and status) */}
+              {type !== 'income' && type !== 'expense' && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '12px' }}>
+                  <div className="input-group">
+                    <label className="input-label">Initial Status</label>
+                    <select className="input-field" value={status} onChange={e => setStatus(e.target.value)}>
+                      <option value="pending">Pending</option>
+                      <option value="paid">Fully Paid</option>
+                    </select>
+                  </div>
+                  <div className="input-group">
+                    <label className="input-label">Repayment Due Date</label>
+                    <input type="date" className="input-field" value={dueDate} onChange={e => setDueDate(e.target.value)} />
+                  </div>
                 </div>
               )}
 
               {/* Description */}
               <div className="input-group">
-                <label className="input-label">Remarks / Description (Optional)</label>
-                <textarea
-                  className="input-field"
-                  placeholder="Add details..."
-                  style={{ width: '100%', height: '60px', resize: 'vertical' }}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                />
+                <label className="input-label">Description / Remarks (Optional)</label>
+                <textarea className="input-field" placeholder="Narration particulars..." style={{ width: '100%', height: '50px', resize: 'vertical' }} value={description} onChange={e => setDescription(e.target.value)} />
               </div>
 
-              {/* Actions */}
-              <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '20px' }}>
                 <button type="submit" disabled={submitLoading} className="btn btn-primary" style={{ flex: '1' }}>
-                  {submitLoading ? 'Recording...' : 'Save Entry'}
+                  {submitLoading ? 'Saving...' : 'Record Entry'}
                 </button>
                 <button type="button" onClick={() => setShowAddForm(false)} className="btn btn-secondary" style={{ flex: '1' }}>
                   Cancel
@@ -497,7 +465,7 @@ export const Transactions = () => {
         </div>
       )}
 
-      {/* Repay / Payment Modal overlay */}
+      {/* Repayments Modal overlay */}
       {repayTransaction && (
         <div style={{
           position: 'fixed', top: '0', left: '0', right: '0', bottom: '0',
@@ -505,58 +473,35 @@ export const Transactions = () => {
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '20px'
         }}>
           <div className="glass-card animate-scale-in" style={{ width: '100%', maxWidth: '400px' }}>
-            <h3 style={{ marginBottom: '8px', fontSize: '18px' }}>Log Repayment / Settlement</h3>
-            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px' }}>
-              Recording a payment against <strong>{repayTransaction.description || repayTransaction.category}</strong> 
-              {repayTransaction.person && ` for ${repayTransaction.person}`}.
+            <h3 style={{ marginBottom: '8px', fontSize: '18px' }}>Log Settlement Payment</h3>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+              Add a payment transaction for <strong>{repayTransaction.description || repayTransaction.category}</strong>.
             </p>
             
             <form onSubmit={handleRepaySubmit}>
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '8px', fontSize: '13px', marginBottom: '20px', border: '1px solid var(--border-color)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span>Total Loan Amount:</span>
-                  <span style={{ fontWeight: 'bold' }}>₹{repayTransaction.amount.toLocaleString('en-IN')}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span>Already Repaid:</span>
-                  <span style={{ fontWeight: 'bold', color: 'hsl(var(--accent-emerald))' }}>₹{repayTransaction.repaid_amount.toLocaleString('en-IN')}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-color)', paddingTop: '6px', marginTop: '6px', fontWeight: '700' }}>
-                  <span>Outstanding (Bkaya):</span>
-                  <span style={{ color: 'hsl(var(--accent-rose))' }}>₹{(repayTransaction.amount - repayTransaction.repaid_amount).toLocaleString('en-IN')}</span>
-                </div>
-              </div>
-
-              {/* Repay Amount */}
+              {/* Payment Amount */}
               <div className="input-group">
-                <label className="input-label">Repayment Amount (₹)</label>
-                <input
-                  type="number"
-                  required
-                  min={1}
-                  max={repayTransaction.amount - repayTransaction.repaid_amount}
-                  placeholder="Enter amount paid"
-                  className="input-field"
-                  value={repayAmount}
-                  onChange={(e) => setRepayAmount(e.target.value)}
-                  style={{ width: '100%' }}
-                />
+                <label className="input-label">Payment Amount (₹)</label>
+                <input type="number" required min={1} placeholder="Enter paid value" className="input-field" value={repayAmount} onChange={e => setRepayAmount(e.target.value)} style={{ width: '100%' }} />
               </div>
 
-              {/* Repay Date */}
+              {/* Bank account used */}
+              <div className="input-group">
+                <label className="input-label">Debit/Credit Bank Account</label>
+                <select required className="input-field" value={repayAccount} onChange={e => setRepayAccount(e.target.value)} style={{ width: '100%' }}>
+                  <option value="">Select Bank Account</option>
+                  {accounts.map(acc => (
+                    <option key={acc.id} value={acc.id}>{acc.name} (Balance: ₹{acc.balance.toLocaleString('en-IN')})</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Payment date */}
               <div className="input-group">
                 <label className="input-label">Payment Date</label>
-                <input
-                  type="date"
-                  required
-                  className="input-field"
-                  value={repayDate}
-                  onChange={(e) => setRepayDate(e.target.value)}
-                  style={{ width: '100%' }}
-                />
+                <input type="date" required className="input-field" value={repayDate} onChange={e => setRepayDate(e.target.value)} style={{ width: '100%' }} />
               </div>
 
-              {/* Actions */}
               <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
                 <button type="submit" disabled={repayLoading} className="btn btn-primary" style={{ flex: '1' }}>
                   {repayLoading ? 'Saving...' : 'Record Payment'}
