@@ -62,6 +62,12 @@ export const Transactions = () => {
 
   useEffect(() => {
     loadAllData();
+
+    const handleSync = () => {
+      loadAllData();
+    };
+    window.addEventListener('offline-sync-completed', handleSync);
+    return () => window.removeEventListener('offline-sync-completed', handleSync);
   }, []);
 
   const handleAddSubmit = async (e) => {

@@ -29,6 +29,12 @@ export const Dashboard = ({ setActiveTab }) => {
 
   useEffect(() => {
     loadDashboardData();
+
+    const handleSync = () => {
+      loadDashboardData();
+    };
+    window.addEventListener('offline-sync-completed', handleSync);
+    return () => window.removeEventListener('offline-sync-completed', handleSync);
   }, []);
 
   if (loading) {
@@ -165,16 +171,7 @@ export const Dashboard = ({ setActiveTab }) => {
         <PieChart data={distributionData} title="Liquidity & Obligation Split" />
       </div>
 
-      {/* Advice Card */}
-      <div className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: '16px', background: 'rgba(10, 132, 255, 0.04)', borderColor: 'rgba(10, 132, 255, 0.1)' }}>
-        <AlertCircle size={24} style={{ color: 'rgb(var(--apple-blue))', flexShrink: 0 }} />
-        <div>
-          <h4 style={{ fontSize: '14px', fontWeight: '700', marginBottom: '2px' }}>Enterprise Liquidity Protocol</h4>
-          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-            Your ledger calculations utilize single-source cryptographic signatures to audit assets and obligations. To clear outstanding liabilities, record repayments directly under the <strong>Ledger Table</strong>. Progressive caching stores static views for sub-millisecond execution.
-          </p>
-        </div>
-      </div>
+
     </div>
   );
 };

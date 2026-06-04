@@ -150,10 +150,14 @@ export async function sendOTPEmail(gasUrl, email, otp, username, type) {
   const url = gasUrl || "https://script.google.com/macros/s/AKfycbwxh5LQLCGtwGflfF7V5HKyL7viFNlAkAbsgz5xEDQo8Eg_f1kw47EjxrzSAC891sm1/exec";
   
   try {
+    const bodyData = JSON.stringify({ email, otp, username, type });
     const res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, otp, username, type })
+      headers: { 
+        "Content-Type": "application/json",
+        "Content-Length": bodyData.length.toString()
+      },
+      body: bodyData
     });
     const result = await res.json();
     return result.success;

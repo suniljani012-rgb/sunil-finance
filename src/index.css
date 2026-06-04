@@ -135,6 +135,7 @@ body {
   font-size: 15px;
   color: var(--text-primary);
   outline: none;
+  width: 100%;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
@@ -251,14 +252,14 @@ h1, h2, h3, h4, h5, h6 {
 .cylinder-top {
   top: 0;
   height: 12px;
-  transform: translateY(-6px) rotateX(0deg);
+  transform: translateY(-6px) rotateX(65deg);
   z-index: 2;
 }
 
 .cylinder-bottom {
   bottom: 0;
   height: 12px;
-  transform: translateY(6px) rotateX(0deg);
+  transform: translateY(6px) rotateX(65deg);
   z-index: 1;
 }
 

@@ -66,9 +66,9 @@ export async function onRequestPost(context) {
 
     return new Response(JSON.stringify({
       success: true,
-      message: "Login OTP sent to email",
+      message: mailSent ? "Login OTP sent to email" : "Login OTP generated (Email failed)",
       email: user.email,
-      mockOtp: gasUrl ? undefined : otp // For local dev testing ease
+      mockOtp: (!mailSent || !gasUrl) ? otp : undefined
     }), {
       status: 200,
       headers: { "Content-Type": "application/json" }

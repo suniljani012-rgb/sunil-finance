@@ -48,9 +48,9 @@ export async function onRequestPost(context) {
 
       return new Response(JSON.stringify({
         success: true,
-        message: "OTP resent. Please check your email.",
+        message: mailSent ? "OTP resent. Please check your email." : "OTP generated (Email failed).",
         email,
-        mockOtp: gasUrl ? undefined : otp // For local dev testing ease
+        mockOtp: (!mailSent || !gasUrl) ? otp : undefined
       }), {
         status: 200,
         headers: { "Content-Type": "application/json" }
@@ -72,9 +72,9 @@ export async function onRequestPost(context) {
 
     return new Response(JSON.stringify({
       success: true,
-      message: "Registration OTP sent to email.",
+      message: mailSent ? "Registration OTP sent to email." : "Registration OTP generated (Email failed).",
       email,
-      mockOtp: gasUrl ? undefined : otp // For local dev testing ease
+      mockOtp: (!mailSent || !gasUrl) ? otp : undefined // Return OTP if email failed or url missing
     }), {
       status: 200,
       headers: { "Content-Type": "application/json" }
