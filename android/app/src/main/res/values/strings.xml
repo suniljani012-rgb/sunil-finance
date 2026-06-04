@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">FinAura</string>
-    <string name="title_activity_main">FinAura</string>
+    <string name="app_name">Sunil Fin</string>
+    <string name="title_activity_main">Sunil Fin</string>
     <string name="package_name">com.finaura.app</string>
     <string name="custom_url_scheme">com.finaura.app</string>
 </resources>

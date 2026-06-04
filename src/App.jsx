@@ -101,10 +101,10 @@ const DashboardLayout = () => {
           {/* Brand Header with Toggle Buttons */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px', marginBottom: '8px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <img src="/logo.png" alt="FinAura Logo" style={{ height: '36px', width: '36px', objectFit: 'cover', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)' }} />
+              <img src="logo.png" alt="FinAura Logo" style={{ height: '36px', width: '36px', objectFit: 'cover', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)' }} />
               <div>
                 <h1 style={{ fontSize: '18px', fontWeight: '800', lineHeight: '1.1' }}>
-                  Fin<span style={{ color: 'rgb(var(--apple-blue))' }}>Aura</span>
+                  Sunil <span style={{ color: 'rgb(var(--apple-blue))' }}>Fin</span>
                 </h1>
                 <span style={{ fontSize: '9px', textTransform: 'uppercase', color: 'rgb(var(--apple-blue))', fontWeight: '700', letterSpacing: '0.08em' }}>Enterprise</span>
               </div>
@@ -289,7 +289,77 @@ const DashboardLayout = () => {
         {activeTab === 'accounts' && <AccountManager />}
         {activeTab === 'headers' && <HeaderManager />}
         {activeTab === 'reports' && <Reports />}
+        {activeTab === 'more' && (
+          <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div>
+              <h2 style={{ fontSize: '28px', fontWeight: '800' }}>More Operations</h2>
+              <p style={{ color: 'var(--text-secondary)', marginTop: '4px' }}>Access bank statements, contacts directories, account configurations, and reports.</p>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <button className="more-item-card" onClick={() => setActiveTab('statement')}>
+                <Upload size={18} style={{ color: 'rgb(var(--apple-blue))' }} />
+                <span>CSV Statement Uploader</span>
+              </button>
+              <button className="more-item-card" onClick={() => setActiveTab('payees')}>
+                <User size={18} style={{ color: 'rgb(var(--apple-blue))' }} />
+                <span>Payee Contacts Directory</span>
+              </button>
+              <button className="more-item-card" onClick={() => setActiveTab('accounts')}>
+                <CreditCard size={18} style={{ color: 'rgb(var(--apple-blue))' }} />
+                <span>Bank Accounts & Cash Wallets</span>
+              </button>
+              <button className="more-item-card" onClick={() => setActiveTab('headers')}>
+                <Tag size={18} style={{ color: 'rgb(var(--apple-blue))' }} />
+                <span>Ledger Category Heads</span>
+              </button>
+              <button className="more-item-card" onClick={() => setActiveTab('reports')}>
+                <FileText size={18} style={{ color: 'rgb(var(--apple-blue))' }} />
+                <span>Print Ledger Sheets & Reports</span>
+              </button>
+              <button 
+                className="more-item-card" 
+                style={{ background: 'rgba(255, 69, 58, 0.05)', color: 'rgb(var(--apple-red))', borderColor: 'rgba(255, 69, 58, 0.15)' }} 
+                onClick={logout}
+              >
+                <LogOut size={18} />
+                <span>Sign Out of Sunil Fin</span>
+              </button>
+            </div>
+          </div>
+        )}
       </main>
+
+      {/* Bottom Nav Bar (Mobile Viewport Only) */}
+      <nav className="bottom-nav">
+        <button 
+          onClick={() => setActiveTab('dashboard')} 
+          className={`bottom-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+        >
+          <LayoutDashboard size={20} />
+          <span>Home</span>
+        </button>
+        <button 
+          onClick={() => setActiveTab('transactions')} 
+          className={`bottom-nav-item ${activeTab === 'transactions' ? 'active' : ''}`}
+        >
+          <ReceiptText size={20} />
+          <span>Ledger</span>
+        </button>
+        <button 
+          onClick={() => setActiveTab('loans')} 
+          className={`bottom-nav-item ${activeTab === 'loans' ? 'active' : ''}`}
+        >
+          <Landmark size={20} />
+          <span>Loans</span>
+        </button>
+        <button 
+          onClick={() => setActiveTab('more')} 
+          className={`bottom-nav-item ${activeTab === 'more' || ['statement', 'payees', 'accounts', 'headers', 'reports'].includes(activeTab) ? 'active' : ''}`}
+        >
+          <Smartphone size={20} />
+          <span>More</span>
+        </button>
+      </nav>
     </div>
   );
 };

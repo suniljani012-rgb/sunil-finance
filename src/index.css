@@ -545,4 +545,105 @@ body.light-theme .skeleton-card {
   background: rgba(255, 255, 255, 0.7);
 }
 
+/* Bottom Navigation Bar (Mobile Only) */
+.bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: rgba(13, 13, 15, 0.92);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-top: 1px solid var(--border-color);
+  justify-content: space-around;
+  align-items: center;
+  z-index: 99;
+  padding: 0 10px;
+}
+
+body.light-theme .bottom-nav {
+  background: rgba(245, 245, 247, 0.92);
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast);
+}
+
+.bottom-nav-item:hover, .bottom-nav-item.active {
+  color: rgb(var(--apple-blue));
+}
+
+.more-item-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 15px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.more-item-card:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+body.light-theme .more-item-card {
+  background: rgba(0, 0, 0, 0.015);
+}
+
+body.light-theme .more-item-card:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+@media (max-width: 900px) {
+  .bottom-nav {
+    display: flex;
+  }
+  
+  .main-layout {
+    grid-template-columns: 1fr;
+    padding-bottom: 74px; /* Ensure content is not hidden behind bottom nav */
+  }
+  
+  .sidebar {
+    height: auto;
+    position: relative;
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+    padding: 16px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  
+  /* Hide the horizontal menu in sidebar on mobile since we have bottom nav */
+  .sidebar-menu {
+    display: none !important;
+  }
+}
+
+
 

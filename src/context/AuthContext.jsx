@@ -145,9 +145,9 @@ export const AuthProvider = ({ children }) => {
       
       // Trigger native/PWA local notification
       if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification("FinAura Cloud Sync", {
+        new Notification("Sunil Fin Cloud Sync", {
           body: `Successfully synchronized ${successCount} offline transactions!`,
-          icon: '/logo.png'
+          icon: 'logo.png'
         });
       }
     }

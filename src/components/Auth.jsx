@@ -108,9 +108,9 @@ export const Auth = () => {
         {/* Header Logo */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', marginBottom: '8px' }}>
-            <img src="/logo.png" alt="Logo" style={{ height: '40px', width: '40px', objectFit: 'cover', borderRadius: '50%' }} />
+            <img src="logo.png" alt="Logo" style={{ height: '40px', width: '40px', objectFit: 'cover', borderRadius: '50%' }} />
             <h1 style={{ fontSize: '24px', fontWeight: '800' }}>
-              Sunil <span style={{ color: 'hsl(var(--accent-indigo))' }}>Finance</span>
+              Sunil <span style={{ color: 'hsl(var(--accent-indigo))' }}>Fin</span>
             </h1>
           </div>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>

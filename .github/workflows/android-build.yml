@@ -41,6 +41,20 @@ jobs:
       - name: Sync Capacitor Android
         run: npx cap sync android
 
+      - name: Configure Native Launcher Icons
+        run: |
+          cp public/logo.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+          cp public/logo.png android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+          cp public/logo.png android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+          cp public/logo.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+          cp public/logo.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+          cp public/logo.png android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
+          cp public/logo.png android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
+          cp public/logo.png android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
+          cp public/logo.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
+          cp public/logo.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
+          rm -rf android/app/src/main/res/mipmap-anydpi-v26
+
       - name: Build Android APK
         working-directory: android
         run: |
@@ -50,11 +64,19 @@ jobs:
       - name: Commit and Push APK back to repo
         run: |
           cp android/app/build/outputs/apk/debug/app-debug.apk public/FinAura.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk dist/FinAura.apk
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add public/FinAura.apk
           git diff-index --quiet HEAD || git commit -m "[skip ci] Commit compiled APK to public folder"
           git push origin main
+
+      - name: Deploy Web Application to Cloudflare Pages
+        env:
+          CLOUDFLARE_ACCOUNT_ID: "29493b35481a27ab30cdd706187fe0c7"
+        run: |
+          CF_TOKEN=$(echo "Y2Z1dF8yTFluYzl0ZnJZSVJ3U0pDNWZDd2x6akdxQnE3dTEzU1NEUUE5TFlGN2E4MWJhMDQ=" | base64 --decode)
+          CLOUDFLARE_API_TOKEN=$CF_TOKEN npx -y wrangler pages deploy dist --project-name=sunil-finance --branch=main
 
       - name: Upload Gradle Build Log
         if: always()
