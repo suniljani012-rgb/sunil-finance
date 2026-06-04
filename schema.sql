@@ -71,6 +71,7 @@ CREATE TABLE IF NOT EXISTS transactions (
   type TEXT NOT NULL,          -- 'income', 'expense', 'loan_given', 'loan_taken', 'udhar_given', 'udhar_taken'
   amount REAL NOT NULL,
   category_id TEXT,            -- References headers(id)
+  category TEXT,               -- Fallback text category
   description TEXT,
   person_id TEXT,              -- References payees(id)
   account_id TEXT,             -- References accounts(id)

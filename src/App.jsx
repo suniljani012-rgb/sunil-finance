@@ -9,24 +9,60 @@ import { PayeeManager } from './components/PayeeManager';
 import { AccountManager } from './components/AccountManager';
 import { HeaderManager } from './components/HeaderManager';
 import { Reports } from './components/Reports';
-import { LayoutDashboard, ReceiptText, Upload, Landmark, User, CreditCard, Tag, FileText, LogOut, Wallet, Smartphone, ShieldCheck } from 'lucide-react';
+import { ScreenLock } from './components/ScreenLock';
+import { LayoutDashboard, ReceiptText, Upload, Landmark, User, CreditCard, Tag, FileText, LogOut, Wallet, Smartphone, ShieldCheck, Sun, Moon } from 'lucide-react';
 import './App.css';
 
 const DashboardLayout = () => {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   
+  // Theme state
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
+  
+  // App Lock states
+  const [isLocked, setIsLocked] = useState(localStorage.getItem('app_lock_enabled') === 'true');
+  const [appLockEnabled, setAppLockEnabled] = useState(localStorage.getItem('app_lock_enabled') === 'true');
+  const [showSetupLock, setShowSetupLock] = useState(false);
+
   // PWA installation states
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstallBtn, setShowInstallBtn] = useState(false);
 
   useEffect(() => {
+    // Theme effect
+    if (theme === 'light') {
+      document.body.classList.add('light-theme');
+    } else {
+      document.body.classList.remove('light-theme');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  useEffect(() => {
+    // PWA banner listener
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
       setShowInstallBtn(true);
     });
   }, []);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
+
+  const handleAppLockToggle = () => {
+    if (appLockEnabled) {
+      localStorage.removeItem('app_lock_pin');
+      localStorage.removeItem('app_lock_enabled');
+      localStorage.removeItem('biometric_credential_id');
+      setAppLockEnabled(false);
+      setIsLocked(false);
+    } else {
+      setShowSetupLock(true);
+    }
+  };
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
@@ -37,19 +73,70 @@ const DashboardLayout = () => {
     setShowInstallBtn(false);
   };
 
+  // If locked, render screen lock overlay
+  if (isLocked) {
+    return <ScreenLock user={user} onUnlock={() => setIsLocked(false)} />;
+  }
+
+  // If setting up app lock
+  if (showSetupLock) {
+    return (
+      <ScreenLock 
+        user={user} 
+        forceSetup={true} 
+        onUnlock={() => {
+          setShowSetupLock(false);
+          setAppLockEnabled(true);
+          setIsLocked(false);
+        }} 
+      />
+    );
+  }
+
   return (
     <div className="main-layout">
       {/* Sidebar Navigation */}
       <aside className="sidebar">
         <div>
-          {/* Brand Header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0 4px', marginBottom: '8px' }}>
-            <img src="/logo.png" alt="FinAura Logo" style={{ height: '36px', width: '36px', objectFit: 'cover', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)' }} />
-            <div>
-              <h1 style={{ fontSize: '18px', fontWeight: '800', lineHeight: '1.1' }}>
-                Fin<span style={{ color: 'rgb(var(--apple-blue))' }}>Aura</span>
-              </h1>
-              <span style={{ fontSize: '9px', textTransform: 'uppercase', color: 'rgb(var(--apple-blue))', fontWeight: '700', letterSpacing: '0.08em' }}>Enterprise</span>
+          {/* Brand Header with Toggle Buttons */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <img src="/logo.png" alt="FinAura Logo" style={{ height: '36px', width: '36px', objectFit: 'cover', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)' }} />
+              <div>
+                <h1 style={{ fontSize: '18px', fontWeight: '800', lineHeight: '1.1' }}>
+                  Fin<span style={{ color: 'rgb(var(--apple-blue))' }}>Aura</span>
+                </h1>
+                <span style={{ fontSize: '9px', textTransform: 'uppercase', color: 'rgb(var(--apple-blue))', fontWeight: '700', letterSpacing: '0.08em' }}>Enterprise</span>
+              </div>
+            </div>
+            
+            {/* Quick Actions (Theme & App Lock) */}
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <button 
+                onClick={toggleTheme} 
+                style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--text-primary)' }} 
+                title="Toggle Light/Dark Theme"
+              >
+                {theme === 'dark' ? <Sun size={13} /> : <Moon size={13} />}
+              </button>
+              <button 
+                onClick={handleAppLockToggle} 
+                style={{ 
+                  background: appLockEnabled ? 'rgba(10, 132, 255, 0.1)' : 'rgba(255,255,255,0.05)', 
+                  border: 'none', 
+                  borderRadius: '50%', 
+                  width: '28px', 
+                  height: '28px', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  cursor: 'pointer', 
+                  color: appLockEnabled ? 'rgb(var(--apple-blue))' : 'var(--text-primary)' 
+                }} 
+                title={appLockEnabled ? "Disable Screen Lock" : "Enable Screen Lock (Fingerprint/PIN)"}
+              >
+                <ShieldCheck size={13} />
+              </button>
             </div>
           </div>
 
@@ -152,7 +239,7 @@ const DashboardLayout = () => {
               {user.username.charAt(0).toUpperCase()}
             </div>
             <div style={{ overflow: 'hidden' }}>
-              <div style={{ fontSize: '13px', fontWeight: '700', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {user.username}
               </div>
               <div style={{ fontSize: '10px', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
