@@ -1,15 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Auth } from './components/Auth';
 import { Dashboard } from './components/Dashboard';
 import { Transactions } from './components/Transactions';
+import { StatementParser } from './components/StatementParser';
 import { Reminders } from './components/Reminders';
-import { LayoutDashboard, ReceiptText, BellRing, LogOut, Wallet } from 'lucide-react';
+import { Reports } from './components/Reports';
+import { LayoutDashboard, ReceiptText, Upload, BellRing, FileText, LogOut, Wallet, Smartphone, ShieldCheck } from 'lucide-react';
 import './App.css';
 
 const DashboardLayout = () => {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
+  
+  // PWA Installation prompt helper states
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallBtn, setShowInstallBtn] = useState(false);
+
+  useEffect(() => {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBtn(true);
+    });
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response to PWA install: ${outcome}`);
+    setDeferredPrompt(null);
+    setShowInstallBtn(false);
+  };
 
   return (
     <div className="main-layout">
@@ -17,11 +40,14 @@ const DashboardLayout = () => {
       <aside className="sidebar">
         <div>
           {/* Brand Header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '0 8px' }}>
-            <img src="/logo.png" alt="Logo" style={{ height: '40px', width: '40px', objectFit: 'cover', borderRadius: '50%' }} />
-            <h1 style={{ fontSize: '20px', fontWeight: '800' }}>
-              Sunil <span style={{ color: 'hsl(var(--accent-indigo))' }}>Finance</span>
-            </h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0 4px', marginBottom: '8px' }}>
+            <img src="/logo.png" alt="FinAura Logo" style={{ height: '36px', width: '36px', objectFit: 'cover', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)' }} />
+            <div>
+              <h1 style={{ fontSize: '18px', fontWeight: '800', lineHeight: '1.1' }}>
+                Fin<span style={{ color: 'rgb(var(--apple-blue))' }}>Aura</span>
+              </h1>
+              <span style={{ fontSize: '9px', textTransform: 'uppercase', color: 'rgb(var(--apple-blue))', fontWeight: '700', letterSpacing: '0.08em' }}>Enterprise</span>
+            </div>
           </div>
 
           {/* Navigation Links */}
@@ -31,7 +57,7 @@ const DashboardLayout = () => {
               className={`sidebar-item ${activeTab === 'dashboard' ? 'active' : ''}`}
               style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}
             >
-              <LayoutDashboard size={18} />
+              <LayoutDashboard size={16} />
               <span>Dashboard</span>
             </button>
 
@@ -40,8 +66,17 @@ const DashboardLayout = () => {
               className={`sidebar-item ${activeTab === 'transactions' ? 'active' : ''}`}
               style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}
             >
-              <ReceiptText size={18} />
-              <span>Transactions</span>
+              <ReceiptText size={16} />
+              <span>Ledger Table</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('statement')}
+              className={`sidebar-item ${activeTab === 'statement' ? 'active' : ''}`}
+              style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}
+            >
+              <Upload size={16} />
+              <span>CSV Uploader</span>
             </button>
 
             <button
@@ -49,26 +84,48 @@ const DashboardLayout = () => {
               className={`sidebar-item ${activeTab === 'reminders' ? 'active' : ''}`}
               style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}
             >
-              <BellRing size={18} />
+              <BellRing size={16} />
               <span>Reminders</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('reports')}
+              className={`sidebar-item ${activeTab === 'reports' ? 'active' : ''}`}
+              style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}
+            >
+              <FileText size={16} />
+              <span>Reports Print</span>
             </button>
           </nav>
         </div>
 
-        {/* User Card & Logout */}
-        <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '0 8px' }}>
+        {/* User Card & Mobile Install */}
+        <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          
+          {/* PWA Mobile Installation Promo */}
+          {showInstallBtn && (
+            <button
+              onClick={handleInstallClick}
+              className="sidebar-item"
+              style={{ background: 'rgba(10, 132, 255, 0.1)', color: 'rgb(var(--apple-blue))', border: '1px solid rgba(10, 132, 255, 0.15)', width: '100%' }}
+            >
+              <Smartphone size={14} />
+              <span>Install Mobile App</span>
+            </button>
+          )}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 4px' }}>
             <div style={{
-              width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(99, 102, 241, 0.1)',
-              color: 'hsl(var(--accent-indigo))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700'
+              width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.05)',
+              color: 'rgb(var(--apple-blue))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '13px'
             }}>
               {user.username.charAt(0).toUpperCase()}
             </div>
             <div style={{ overflow: 'hidden' }}>
-              <div style={{ fontSize: '14px', fontWeight: '700', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div style={{ fontSize: '13px', fontWeight: '700', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {user.username}
               </div>
-              <div style={{ fontSize: '11px', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div style={{ fontSize: '10px', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {user.email}
               </div>
             </div>
@@ -77,9 +134,9 @@ const DashboardLayout = () => {
           <button
             onClick={logout}
             className="sidebar-item"
-            style={{ background: 'rgba(244, 63, 94, 0.05)', color: 'hsl(var(--accent-rose))', border: '1px solid rgba(244, 63, 94, 0.1)', width: '100%', justifyContent: 'center' }}
+            style={{ background: 'rgba(255, 69, 58, 0.05)', color: 'rgb(var(--apple-red))', border: '1px solid rgba(255, 69, 58, 0.08)', width: '100%', justifyContent: 'center' }}
           >
-            <LogOut size={16} />
+            <LogOut size={14} />
             <span>Sign Out</span>
           </button>
         </div>
@@ -89,7 +146,9 @@ const DashboardLayout = () => {
       <main className="content-area">
         {activeTab === 'dashboard' && <Dashboard setActiveTab={setActiveTab} />}
         {activeTab === 'transactions' && <Transactions />}
+        {activeTab === 'statement' && <StatementParser />}
         {activeTab === 'reminders' && <Reminders />}
+        {activeTab === 'reports' && <Reports />}
       </main>
     </div>
   );
@@ -102,9 +161,9 @@ const AppContent = () => {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-primary)', color: 'var(--text-secondary)' }}>
         <div style={{ textAlign: 'center' }}>
-          <Wallet size={48} style={{ color: 'hsl(var(--accent-indigo))', animation: 'pulse 1.5s infinite', margin: '0 auto 16px auto' }} />
-          <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#fff' }}>Connecting securely...</h2>
-          <p style={{ fontSize: '13px', marginTop: '6px' }}>Decrypting financial ledger</p>
+          <Wallet size={40} style={{ color: 'rgb(var(--apple-blue))', animation: 'pulse 1.2s infinite', margin: '0 auto 12px auto' }} />
+          <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#fff' }}>Connecting FinAura...</h2>
+          <p style={{ fontSize: '12px', marginTop: '4px' }}>Decrypting secure enterprise node</p>
         </div>
       </div>
     );

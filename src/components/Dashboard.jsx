@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { CylinderChart } from './CylinderChart';
 import { PieChart } from './PieChart';
-import { TrendingUp, TrendingDown, ArrowUpRight, ArrowDownLeft, ShieldAlert, Award } from 'lucide-react';
+import { AreaChart } from './AreaChart';
+import { TrendingUp, TrendingDown, ArrowUpRight, ArrowDownLeft, ShieldAlert, Award, AlertCircle } from 'lucide-react';
 
 export const Dashboard = ({ setActiveTab }) => {
   const { fetch } = useAuth();
   const [stats, setStats] = useState(null);
+  const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -15,6 +17,9 @@ export const Dashboard = ({ setActiveTab }) => {
       setLoading(true);
       const data = await fetch('/api/dashboard');
       setStats(data.stats);
+      
+      const txData = await fetch('/api/transactions');
+      setTransactions(txData.transactions);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -36,7 +41,7 @@ export const Dashboard = ({ setActiveTab }) => {
 
   if (error) {
     return (
-      <div style={{ padding: '20px', background: 'rgba(244, 63, 94, 0.1)', color: 'hsl(var(--accent-rose))', borderRadius: '12px' }}>
+      <div style={{ padding: '20px', background: 'rgba(255, 69, 58, 0.1)', color: 'rgb(var(--apple-red))', borderRadius: '12px' }}>
         Failed to load dashboard: {error}
       </div>
     );
@@ -51,117 +56,122 @@ export const Dashboard = ({ setActiveTab }) => {
     { label: 'To Pay', value: stats.toPay, colorClass: 'amber' }
   ];
 
-  // Prep pie/donut data (Receivable distribution vs Payable distribution)
+  // Prep donut data
   const distributionData = [
-    { label: 'Available Balance', value: Math.max(stats.currentBalance, 0), colorClass: 'indigo' },
-    { label: 'Due to Receive (Loans/Udhaar)', value: stats.toReceive, colorClass: 'violet' },
-    { label: 'Due to Pay (Loans/Udhaar)', value: stats.toPay, colorClass: 'amber' },
-    { label: 'Expenses Incurred', value: stats.totalExpense, colorClass: 'rose' }
+    { label: 'Net Balance', value: Math.max(stats.currentBalance, 0), colorClass: 'indigo' },
+    { label: 'Receivables', value: stats.toReceive, colorClass: 'violet' },
+    { label: 'Payables', value: stats.toPay, colorClass: 'amber' },
+    { label: 'Expenses', value: stats.totalExpense, colorClass: 'rose' }
   ];
 
   return (
     <div className="animate-fade-in">
-      {/* Upper Welcome Header */}
+      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <h2 style={{ fontSize: '28px', fontWeight: '800' }}>Financial Dashboard</h2>
-          <p style={{ color: 'var(--text-secondary)', marginTop: '4px' }}>Real-time analysis of your cash flow, loans, and udhaar details.</p>
+          <h2 style={{ fontSize: '28px', fontWeight: '800' }}>FinAura Analytics</h2>
+          <p style={{ color: 'var(--text-secondary)', marginTop: '4px' }}>Real-time cash flow statement and debt portfolio intelligence.</p>
         </div>
-        <button onClick={loadDashboardData} className="btn btn-secondary btn-sm" style={{ fontSize: '13px', padding: '8px 16px' }}>
-          Refresh Stats
+        <button onClick={loadDashboardData} className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '13px' }}>
+          Refresh Ledger
         </button>
       </div>
 
       {/* Main Stats Cards Strip */}
       <div className="stats-grid">
         {/* Net Cash Card */}
-        <div className="glass-card" style={{ borderLeft: '4px solid hsl(var(--accent-indigo))' }}>
+        <div className="glass-card" style={{ borderLeft: '4px solid rgb(var(--apple-blue))' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '600' }}>Available Net Cash</span>
-            <span style={{ padding: '6px', background: 'rgba(99, 102, 241, 0.1)', color: 'hsl(var(--accent-indigo))', borderRadius: '50%', display: 'flex' }}>
-              <Award size={18} />
+            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.02em' }}>Available Net Cash</span>
+            <span style={{ padding: '6px', background: 'rgba(10, 132, 255, 0.1)', color: 'rgb(var(--apple-blue))', borderRadius: '50%', display: 'flex' }}>
+              <Award size={16} />
             </span>
           </div>
-          <h3 style={{ fontSize: '24px', margin: '12px 0 6px 0', fontWeight: '800' }}>
+          <h3 style={{ fontSize: '24px', margin: '10px 0 4px 0', fontWeight: '800' }}>
             ₹{stats.currentBalance.toLocaleString('en-IN')}
           </h3>
-          <p style={{ color: stats.currentBalance >= 0 ? 'hsl(var(--accent-emerald))' : 'hsl(var(--accent-rose))', fontSize: '13px', fontWeight: '600' }}>
-            {stats.currentBalance >= 0 ? 'Liquidity is healthy' : 'Negative Cash flow alert'}
+          <p style={{ color: stats.currentBalance >= 0 ? 'rgb(var(--apple-green))' : 'rgb(var(--apple-red))', fontSize: '12px', fontWeight: '700' }}>
+            {stats.currentBalance >= 0 ? 'Liquidity is healthy' : 'Cash deficit warning'}
           </p>
         </div>
 
         {/* Income Card */}
-        <div className="glass-card" style={{ borderLeft: '4px solid hsl(var(--accent-emerald))' }}>
+        <div className="glass-card" style={{ borderLeft: '4px solid rgb(var(--apple-green))' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '600' }}>Total Income</span>
-            <span style={{ padding: '6px', background: 'rgba(16, 185, 129, 0.1)', color: 'hsl(var(--accent-emerald))', borderRadius: '50%', display: 'flex' }}>
-              <ArrowUpRight size={18} />
+            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.02em' }}>Total Inflows</span>
+            <span style={{ padding: '6px', background: 'rgba(48, 209, 88, 0.1)', color: 'rgb(var(--apple-green))', borderRadius: '50%', display: 'flex' }}>
+              <ArrowUpRight size={16} />
             </span>
           </div>
-          <h3 style={{ fontSize: '24px', margin: '12px 0 6px 0', fontWeight: '800', color: 'hsl(var(--accent-emerald))' }}>
+          <h3 style={{ fontSize: '24px', margin: '10px 0 4px 0', fontWeight: '800', color: 'rgb(var(--apple-green))' }}>
             ₹{stats.totalIncome.toLocaleString('en-IN')}
           </h3>
-          <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Total cash inflows recorded</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '11px' }}>Earned & borrowed cash receipts</p>
         </div>
 
         {/* Expense Card */}
-        <div className="glass-card" style={{ borderLeft: '4px solid hsl(var(--accent-rose))' }}>
+        <div className="glass-card" style={{ borderLeft: '4px solid rgb(var(--apple-red))' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '600' }}>Total Expenses</span>
-            <span style={{ padding: '6px', background: 'rgba(244, 63, 94, 0.1)', color: 'hsl(var(--accent-rose))', borderRadius: '50%', display: 'flex' }}>
-              <ArrowDownLeft size={18} />
+            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.02em' }}>Total Outflows</span>
+            <span style={{ padding: '6px', background: 'rgba(255, 69, 58, 0.1)', color: 'rgb(var(--apple-red))', borderRadius: '50%', display: 'flex' }}>
+              <ArrowDownLeft size={16} />
             </span>
           </div>
-          <h3 style={{ fontSize: '24px', margin: '12px 0 6px 0', fontWeight: '800', color: 'hsl(var(--accent-rose))' }}>
+          <h3 style={{ fontSize: '24px', margin: '10px 0 4px 0', fontWeight: '800', color: 'rgb(var(--apple-red))' }}>
             ₹{stats.totalExpense.toLocaleString('en-IN')}
           </h3>
-          <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Total spending recorded</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '11px' }}>Spent & lent disbursements</p>
         </div>
 
         {/* Outstanding Receivables */}
-        <div className="glass-card" style={{ borderLeft: '4px solid hsl(var(--accent-violet))' }}>
+        <div className="glass-card" style={{ borderLeft: '4px solid rgb(var(--apple-purple))' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '600' }}>Total to Receive</span>
-            <span style={{ padding: '6px', background: 'rgba(139, 92, 246, 0.1)', color: 'hsl(var(--accent-violet))', borderRadius: '50%', display: 'flex' }}>
-              <TrendingUp size={18} />
+            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.02em' }}>Total Receivables</span>
+            <span style={{ padding: '6px', background: 'rgba(191, 90, 242, 0.1)', color: 'rgb(var(--apple-purple))', borderRadius: '50%', display: 'flex' }}>
+              <TrendingUp size={16} />
             </span>
           </div>
-          <h3 style={{ fontSize: '24px', margin: '12px 0 6px 0', fontWeight: '800', color: 'hsl(var(--accent-violet))' }}>
+          <h3 style={{ fontSize: '24px', margin: '10px 0 4px 0', fontWeight: '800', color: 'rgb(var(--apple-purple))' }}>
             ₹{stats.toReceive.toLocaleString('en-IN')}
           </h3>
-          <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Unpaid lent money / loans</p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '11px' }}>Money lent pending recovery</p>
         </div>
 
         {/* Outstanding Payables */}
-        <div className="glass-card" style={{ borderLeft: '4px solid hsl(var(--accent-amber))' }}>
+        <div className="glass-card" style={{ borderLeft: '4px solid rgb(var(--apple-orange))' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '600' }}>Total to Pay</span>
-            <span style={{ padding: '6px', background: 'rgba(245, 158, 11, 0.1)', color: 'hsl(var(--accent-amber))', borderRadius: '50%', display: 'flex' }}>
-              <ShieldAlert size={18} />
+            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.02em' }}>Total Liabilities</span>
+            <span style={{ padding: '6px', background: 'rgba(255, 159, 10, 0.1)', color: 'rgb(var(--apple-orange))', borderRadius: '50%', display: 'flex' }}>
+              <ShieldAlert size={16} />
             </span>
           </div>
-          <h3 style={{ fontSize: '24px', margin: '12px 0 6px 0', fontWeight: '800', color: 'hsl(var(--accent-amber))' }}>
+          <h3 style={{ fontSize: '24px', margin: '10px 0 4px 0', fontWeight: '800', color: 'rgb(var(--apple-orange))' }}>
             ₹{stats.toPay.toLocaleString('en-IN')}
           </h3>
-          <p style={{ color: stats.toPay > 0 ? 'hsl(var(--accent-amber))' : 'var(--text-muted)', fontSize: '13px', fontWeight: stats.toPay > 0 ? '600' : 'normal' }}>
-            {stats.toPay > 0 ? 'Active liabilities pending' : 'Zero debt liability'}
+          <p style={{ color: stats.toPay > 0 ? 'rgb(var(--apple-orange))' : 'var(--text-secondary)', fontSize: '12px', fontWeight: stats.toPay > 0 ? '700' : 'normal' }}>
+            {stats.toPay > 0 ? 'Liabilities requiring action' : 'Zero debt liability'}
           </p>
         </div>
       </div>
 
-      {/* Charts Display Grid */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '30px', marginBottom: '30px' }}>
-        <CylinderChart data={cylinderData} />
-        <PieChart data={distributionData} title="Financial Asset & Expense Share" />
+      {/* Interactive Cash Flow Trend Area Chart */}
+      <div style={{ marginBottom: '24px', display: 'flex' }}>
+        <AreaChart transactions={transactions} />
       </div>
 
-      {/* Info Tips Panel */}
-      <div className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: '16px', background: 'rgba(99, 102, 241, 0.05)', borderColor: 'rgba(99, 102, 241, 0.15)' }}>
-        <div style={{ fontSize: '24px' }}>💡</div>
+      {/* Grid with Donut & Cylinder Charts */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', marginBottom: '24px' }}>
+        <CylinderChart data={cylinderData} />
+        <PieChart data={distributionData} title="Liquidity & Obligation Split" />
+      </div>
+
+      {/* Advice Card */}
+      <div className="glass-card" style={{ display: 'flex', alignItems: 'center', gap: '16px', background: 'rgba(10, 132, 255, 0.04)', borderColor: 'rgba(10, 132, 255, 0.1)' }}>
+        <AlertCircle size={24} style={{ color: 'rgb(var(--apple-blue))', flexShrink: 0 }} />
         <div>
-          <h4 style={{ fontSize: '15px', fontWeight: '700', marginBottom: '2px' }}>How Liquidity & Outstanding Balances Work</h4>
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-            Your <strong>Available Net Cash</strong> is calculated by subtracting your total cash outflows (expenses + lent money + debt repayments made) from your cash inflows (income + debt borrowed + repayments received on loans given). Ensure to record repayments in the <strong>Transactions</strong> panel to keep these outstanding values updated!
+          <h4 style={{ fontSize: '14px', fontWeight: '700', marginBottom: '2px' }}>Enterprise Liquidity Protocol</h4>
+          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+            Your ledger calculations utilize single-source cryptographic signatures to audit assets and obligations. To clear outstanding liabilities, record repayments directly under the <strong>Ledger Table</strong>. Progressive caching stores static views for sub-millisecond execution.
           </p>
         </div>
       </div>

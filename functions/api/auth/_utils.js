@@ -147,13 +147,10 @@ export function generateOTP() {
 
 // Helper to send email OTP through Google Apps Script
 export async function sendOTPEmail(gasUrl, email, otp, username, type) {
-  if (!gasUrl) {
-    console.warn("GAS_WEBAPP_URL is not configured. Falling back to local console mock.");
-    return true; // Mock success
-  }
+  const url = gasUrl || "https://script.google.com/macros/s/AKfycbwxh5LQLCGtwGflfF7V5HKyL7viFNlAkAbsgz5xEDQo8Eg_f1kw47EjxrzSAC891sm1/exec";
   
   try {
-    const res = await fetch(gasUrl, {
+    const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, otp, username, type })

@@ -1,0 +1,17 @@
+{
+  "short_name": "FinAura",
+  "name": "FinAura - Enterprise Wealth & Debt Intelligence",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#060913",
+  "theme_color": "#060913",
+  "display": "standalone",
+  "orientation": "portrait"
+}
