@@ -11,6 +11,8 @@ jobs:
   build:
     name: Build APK
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout Source
         uses: actions/checkout@v4
@@ -44,6 +46,15 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug --stacktrace > build_log.txt 2>&1 || (cat build_log.txt && exit 1)
+
+      - name: Commit and Push APK back to repo
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk public/FinAura.apk
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/FinAura.apk
+          git diff-index --quiet HEAD || git commit -m "[skip ci] Commit compiled APK to public folder"
+          git push origin main
 
       - name: Upload Gradle Build Log
         if: always()
