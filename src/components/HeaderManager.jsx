@@ -1,11 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { SkeletonList } from './SkeletonLoader';
 import { Tag, Plus, Trash2, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 
 export const HeaderManager = () => {
   const { fetch } = useAuth();
-  const [headers, setHeaders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [headers, setHeaders] = useState(() => {
+    try {
+      const cached = localStorage.getItem('finaura_cache_headers');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [loading, setLoading] = useState(headers.length === 0);
   const [error, setError] = useState('');
 
   // Form states
@@ -13,20 +21,28 @@ export const HeaderManager = () => {
   const [type, setType] = useState('expense');
   const [submitLoading, setSubmitLoading] = useState(false);
 
-  const loadHeaders = async () => {
+  const loadHeaders = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) {
+        setLoading(true);
+      }
       const data = await fetch('/api/headers');
       setHeaders(data.headers);
+      localStorage.setItem('finaura_cache_headers', JSON.stringify(data.headers));
+      setError('');
     } catch (err) {
-      setError(err.message);
+      if (headers.length === 0) {
+        setError(err.message);
+      }
+      console.error('Failed to background sync headers:', err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadHeaders();
+    const isSilent = headers.length > 0;
+    loadHeaders(isSilent);
   }, []);
 
   const handleSubmit = async (e) => {
@@ -107,8 +123,8 @@ export const HeaderManager = () => {
           <Tag size={18} style={{ color: 'rgb(var(--apple-blue))' }} /> Configured Category Heads ({headers.length})
         </h3>
 
-        {loading ? (
-          <div style={{ color: 'var(--text-secondary)', padding: '20px' }}>Retrieving categories...</div>
+        {loading && headers.length === 0 ? (
+          <SkeletonList itemsCount={3} />
         ) : headers.length === 0 ? (
           <div style={{ color: 'var(--text-muted)', padding: '40px 10px', textAlign: 'center' }}>
             No category heads configured. Use the form to add one.

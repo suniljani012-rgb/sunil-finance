@@ -1,14 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { SkeletonList } from './SkeletonLoader';
 import { Landmark, Calendar, Percent, Plus, Trash2, ArrowUpRight, DollarSign, ListCollapse, Bookmark, CreditCard } from 'lucide-react';
 
 export const LoanTracker = () => {
   const { fetch } = useAuth();
   
-  // Data lists
-  const [loans, setLoans] = useState([]);
-  const [accounts, setAccounts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Data lists with SWR caching
+  const [loans, setLoans] = useState(() => {
+    try {
+      const cached = localStorage.getItem('finaura_cache_loans');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [accounts, setAccounts] = useState(() => {
+    try {
+      const cached = localStorage.getItem('finaura_cache_accounts');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [loading, setLoading] = useState(loans.length === 0);
   const [error, setError] = useState('');
 
   // Add Loan Form states
@@ -26,33 +41,51 @@ export const LoanTracker = () => {
   // EMI Repayment states
   const [repayLoan, setRepayLoan] = useState(null); // loan object being repaid
   const [payAmount, setPayAmount] = useState('');
-  const [payAccount, setPayAccount] = useState('');
+  const [payAccount, setPayAccount] = useState(() => {
+    try {
+      const cached = localStorage.getItem('finaura_cache_accounts');
+      const parsed = cached ? JSON.parse(cached) : [];
+      return parsed.length > 0 ? parsed[0].id : '';
+    } catch {
+      return '';
+    }
+  });
   const [payUtr, setPayUtr] = useState('');
   const [payEmiNum, setPayEmiNum] = useState('');
   const [payDate, setPayDate] = useState(new Date().toISOString().split('T')[0]);
   const [repayLoading, setRepayLoading] = useState(false);
 
-  const loadData = async () => {
+  const loadData = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) {
+        setLoading(true);
+      }
       const loanData = await fetch('/api/loans');
       setLoans(loanData.loans);
+      localStorage.setItem('finaura_cache_loans', JSON.stringify(loanData.loans));
       
       const accData = await fetch('/api/accounts');
       setAccounts(accData.accounts);
+      localStorage.setItem('finaura_cache_accounts', JSON.stringify(accData.accounts));
       if (accData.accounts.length > 0) {
-        setPayAccount(accData.accounts[0].id);
+        if (!payAccount) setPayAccount(accData.accounts[0].id);
       }
+      setError('');
     } catch (err) {
-      setError(err.message);
+      if (loans.length === 0) {
+        setError(err.message);
+      }
+      console.error('Failed to background sync active loans:', err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadData();
+    const isSilent = loans.length > 0;
+    loadData(isSilent);
   }, []);
+
 
   const handleCreateLoan = async (e) => {
     e.preventDefault();
@@ -173,8 +206,8 @@ export const LoanTracker = () => {
       )}
 
       {/* Dynamic Loan progress widgets grid */}
-      {loading ? (
-        <div style={{ color: 'var(--text-secondary)', padding: '20px' }}>Loading loan books...</div>
+      {loading && loans.length === 0 ? (
+        <SkeletonList itemsCount={3} />
       ) : loans.length === 0 ? (
         <div className="glass-card" style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--text-secondary)' }}>
           <Landmark size={48} style={{ margin: '0 auto 16px auto', opacity: 0.3 }} />

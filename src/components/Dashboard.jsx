@@ -3,47 +3,73 @@ import { useAuth } from '../context/AuthContext';
 import { CylinderChart } from './CylinderChart';
 import { PieChart } from './PieChart';
 import { AreaChart } from './AreaChart';
+import { SkeletonDashboard } from './SkeletonLoader';
 import { TrendingUp, TrendingDown, ArrowUpRight, ArrowDownLeft, ShieldAlert, Award, AlertCircle } from 'lucide-react';
 
 export const Dashboard = ({ setActiveTab }) => {
   const { fetch } = useAuth();
-  const [stats, setStats] = useState(null);
-  const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState(() => {
+    try {
+      const cached = localStorage.getItem('finaura_cache_dashboard');
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [transactions, setTransactions] = useState(() => {
+    try {
+      const cached = localStorage.getItem('finaura_cache_transactions');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [loading, setLoading] = useState(!stats); // Only loading spinner if there's no cache
   const [error, setError] = useState('');
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) {
+        setLoading(true);
+      }
       const data = await fetch('/api/dashboard');
-      setStats(data.stats);
-      
       const txData = await fetch('/api/transactions');
+
+      // Update state
+      setStats(data.stats);
       setTransactions(txData.transactions);
+
+      // Save to cache
+      localStorage.setItem('finaura_cache_dashboard', JSON.stringify(data.stats));
+      localStorage.setItem('finaura_cache_transactions', JSON.stringify(txData.transactions));
+      setError('');
     } catch (err) {
-      setError(err.message);
+      // If we don't have stats yet, show error, otherwise let them keep using cached state with a log
+      if (!stats) {
+        setError(err.message);
+      }
+      console.error('Failed to sync background dashboard metrics:', err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadDashboardData();
+    // If stats is already loaded from cache, run silent background fetch
+    const isSilent = !!stats;
+    loadDashboardData(isSilent);
 
     const handleSync = () => {
-      loadDashboardData();
+      loadDashboardData(true);
     };
     window.addEventListener('offline-sync-completed', handleSync);
     return () => window.removeEventListener('offline-sync-completed', handleSync);
   }, []);
 
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh', color: 'var(--text-secondary)' }}>
-        Loading dashboard analytics...
-      </div>
-    );
+  if (loading && !stats) {
+    return <SkeletonDashboard />;
   }
+
 
   if (error) {
     return (

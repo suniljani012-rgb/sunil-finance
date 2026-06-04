@@ -1,11 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { SkeletonList } from './SkeletonLoader';
 import { CreditCard, Landmark, Coins, Plus, Trash2, ShieldAlert } from 'lucide-react';
 
 export const AccountManager = () => {
   const { fetch } = useAuth();
-  const [accounts, setAccounts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [accounts, setAccounts] = useState(() => {
+    try {
+      const cached = localStorage.getItem('finaura_cache_accounts');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [loading, setLoading] = useState(accounts.length === 0);
   const [error, setError] = useState('');
 
   // Form states
@@ -14,20 +22,28 @@ export const AccountManager = () => {
   const [balance, setBalance] = useState('');
   const [submitLoading, setSubmitLoading] = useState(false);
 
-  const loadAccounts = async () => {
+  const loadAccounts = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) {
+        setLoading(true);
+      }
       const data = await fetch('/api/accounts');
       setAccounts(data.accounts);
+      localStorage.setItem('finaura_cache_accounts', JSON.stringify(data.accounts));
+      setError('');
     } catch (err) {
-      setError(err.message);
+      if (accounts.length === 0) {
+        setError(err.message);
+      }
+      console.error('Failed to background sync accounts:', err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadAccounts();
+    const isSilent = accounts.length > 0;
+    loadAccounts(isSilent);
   }, []);
 
   const handleSubmit = async (e) => {
@@ -119,8 +135,8 @@ export const AccountManager = () => {
           <Landmark size={18} style={{ color: 'rgb(var(--apple-blue))' }} /> Live Account Balances ({accounts.length})
         </h3>
 
-        {loading ? (
-          <div style={{ color: 'var(--text-secondary)', padding: '20px' }}>Retrieving account logs...</div>
+        {loading && accounts.length === 0 ? (
+          <SkeletonList itemsCount={2} />
         ) : accounts.length === 0 ? (
           <div style={{ color: 'var(--text-muted)', padding: '40px 10px', textAlign: 'center' }}>
             No accounts configured yet. Register bank or cash accounts using the form.

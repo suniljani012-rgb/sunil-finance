@@ -1,11 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { SkeletonList } from './SkeletonLoader';
 import { User, Phone, Mail, CreditCard, Plus, Trash2, Key } from 'lucide-react';
 
 export const PayeeManager = () => {
   const { fetch } = useAuth();
-  const [payees, setPayees] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [payees, setPayees] = useState(() => {
+    try {
+      const cached = localStorage.getItem('finaura_cache_payees');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [loading, setLoading] = useState(payees.length === 0);
   const [error, setError] = useState('');
 
   // Form states
@@ -17,21 +25,30 @@ export const PayeeManager = () => {
   const [ifsc, setIfsc] = useState('');
   const [submitLoading, setSubmitLoading] = useState(false);
 
-  const loadPayees = async () => {
+  const loadPayees = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) {
+        setLoading(true);
+      }
       const data = await fetch('/api/payees');
       setPayees(data.payees);
+      localStorage.setItem('finaura_cache_payees', JSON.stringify(data.payees));
+      setError('');
     } catch (err) {
-      setError(err.message);
+      if (payees.length === 0) {
+        setError(err.message);
+      }
+      console.error('Failed to background sync payees:', err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadPayees();
+    const isSilent = payees.length > 0;
+    loadPayees(isSilent);
   }, []);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -132,8 +149,8 @@ export const PayeeManager = () => {
           <User size={18} style={{ color: 'rgb(var(--apple-blue))' }} /> Registered Payees Directory ({payees.length})
         </h3>
 
-        {loading ? (
-          <div style={{ color: 'var(--text-secondary)', padding: '20px' }}>Loading directory...</div>
+        {loading && payees.length === 0 ? (
+          <SkeletonList itemsCount={3} />
         ) : payees.length === 0 ? (
           <div style={{ color: 'var(--text-muted)', padding: '40px 10px', textAlign: 'center' }}>
             No contacts registered yet. Use the form to add payees.

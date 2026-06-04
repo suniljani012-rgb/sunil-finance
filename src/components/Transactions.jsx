@@ -1,17 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { SkeletonTable } from './SkeletonLoader';
 import { Plus, Trash2, Calendar, User, DollarSign, Tag, Landmark, FileText, Bookmark, CreditCard } from 'lucide-react';
 
 export const Transactions = () => {
   const { fetch } = useAuth();
   
-  // Data lists
-  const [transactions, setTransactions] = useState([]);
-  const [accounts, setAccounts] = useState([]);
-  const [payees, setPayees] = useState([]);
-  const [headers, setHeaders] = useState([]);
+  // Data lists with SWR Local Caching
+  const [transactions, setTransactions] = useState(() => {
+    try {
+      const cached = localStorage.getItem('finaura_cache_transactions');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [accounts, setAccounts] = useState(() => {
+    try {
+      const cached = localStorage.getItem('finaura_cache_accounts');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [payees, setPayees] = useState(() => {
+    try {
+      const cached = localStorage.getItem('finaura_cache_payees');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [headers, setHeaders] = useState(() => {
+    try {
+      const cached = localStorage.getItem('finaura_cache_headers');
+      return cached ? JSON.parse(cached) : [];
+    } catch {
+      return [];
+    }
+  });
   
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(transactions.length === 0);
   const [error, setError] = useState('');
   const [filterType, setFilterType] = useState('all');
 
@@ -22,7 +51,15 @@ export const Transactions = () => {
   const [categoryId, setCategoryId] = useState('');
   const [description, setDescription] = useState('');
   const [personId, setPersonId] = useState('');
-  const [accountId, setAccountId] = useState('');
+  const [accountId, setAccountId] = useState(() => {
+    try {
+      const cached = localStorage.getItem('finaura_cache_accounts');
+      const parsed = cached ? JSON.parse(cached) : [];
+      return parsed.length > 0 ? parsed[0].id : '';
+    } catch {
+      return '';
+    }
+  });
   const [utrNumber, setUtrNumber] = useState('');
   const [status, setStatus] = useState('paid');
   const [dueDate, setDueDate] = useState('');
@@ -31,44 +68,64 @@ export const Transactions = () => {
   // Repayment form states
   const [repayTransaction, setRepayTransaction] = useState(null);
   const [repayAmount, setRepayAmount] = useState('');
-  const [repayAccount, setRepayAccount] = useState('');
+  const [repayAccount, setRepayAccount] = useState(() => {
+    try {
+      const cached = localStorage.getItem('finaura_cache_accounts');
+      const parsed = cached ? JSON.parse(cached) : [];
+      return parsed.length > 0 ? parsed[0].id : '';
+    } catch {
+      return '';
+    }
+  });
   const [repayDate, setRepayDate] = useState(new Date().toISOString().split('T')[0]);
   const [repayLoading, setRepayLoading] = useState(false);
 
-  const loadAllData = async () => {
+  const loadAllData = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) {
+        setLoading(true);
+      }
       const txData = await fetch('/api/transactions');
       setTransactions(txData.transactions);
+      localStorage.setItem('finaura_cache_transactions', JSON.stringify(txData.transactions));
 
       const accData = await fetch('/api/accounts');
       setAccounts(accData.accounts);
+      localStorage.setItem('finaura_cache_accounts', JSON.stringify(accData.accounts));
       if (accData.accounts.length > 0) {
-        setAccountId(accData.accounts[0].id);
-        setRepayAccount(accData.accounts[0].id);
+        if (!accountId) setAccountId(accData.accounts[0].id);
+        if (!repayAccount) setRepayAccount(accData.accounts[0].id);
       }
 
       const payeeData = await fetch('/api/payees');
       setPayees(payeeData.payees);
+      localStorage.setItem('finaura_cache_payees', JSON.stringify(payeeData.payees));
 
       const headData = await fetch('/api/headers');
       setHeaders(headData.headers);
+      localStorage.setItem('finaura_cache_headers', JSON.stringify(headData.headers));
+      setError('');
     } catch (err) {
-      setError(err.message);
+      if (transactions.length === 0) {
+        setError(err.message);
+      }
+      console.error('Failed to background sync ledger data:', err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadAllData();
+    const isSilent = transactions.length > 0;
+    loadAllData(isSilent);
 
     const handleSync = () => {
-      loadAllData();
+      loadAllData(true);
     };
     window.addEventListener('offline-sync-completed', handleSync);
     return () => window.removeEventListener('offline-sync-completed', handleSync);
   }, []);
+
 
   const handleAddSubmit = async (e) => {
     e.preventDefault();
@@ -244,8 +301,8 @@ export const Transactions = () => {
       </div>
 
       {/* Transactions Grid list */}
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>Loading transactions...</div>
+      {loading && filteredTransactions.length === 0 ? (
+        <SkeletonTable columnsCount={6} rowsCount={6} />
       ) : filteredTransactions.length === 0 ? (
         <div className="glass-card" style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-secondary)' }}>
           <FileText size={40} style={{ margin: '0 auto 16px auto', opacity: 0.2 }} />

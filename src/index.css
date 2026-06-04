@@ -492,3 +492,57 @@ body.light-theme .dropzone {
   background: rgba(0, 0, 0, 0.01);
 }
 
+/* Skeleton Shimmer Animations & Styles */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.03) 25%, rgba(255, 255, 255, 0.09) 50%, rgba(255, 255, 255, 0.03) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite linear;
+}
+
+body.light-theme .shimmer {
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.03) 25%, rgba(0, 0, 0, 0.08) 50%, rgba(0, 0, 0, 0.03) 75%);
+  background-size: 200% 100%;
+}
+
+.skeleton-box {
+  height: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-sm);
+  display: inline-block;
+  vertical-align: middle;
+}
+
+body.light-theme .skeleton-box {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.skeleton-circle {
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+body.light-theme .skeleton-circle {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.skeleton-card {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  background: rgba(22, 22, 26, 0.65);
+  padding: 24px;
+}
+
+body.light-theme .skeleton-card {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+
