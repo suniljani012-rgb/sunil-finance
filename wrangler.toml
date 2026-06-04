@@ -4,6 +4,10 @@ compatibility_date = "2024-01-01"
 
 pages_build_output_dir = "dist"
 
+[vars]
+GAS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbwxh5LQLCGtwGflfF7V5HKyL7viFNlAkAbsgz5xEDQo8Eg_f1kw47EjxrzSAC891sm1/exec"
+JWT_SECRET = "finaura_jwt_secret_token_key_2026_enterprise"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "sunil"
