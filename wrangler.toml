@@ -1,0 +1,10 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "sunil-finance"
+compatibility_date = "2024-01-01"
+
+pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "finance-db"
+database_id = "a094302a-fd6a-4092-934d-7e57705fcf9e" # The user will replace this with their actual database ID after creating it on Cloudflare
