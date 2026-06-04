@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, User, Key, Eye, EyeOff, AlertTriangle } from 'lucide-react';
+import { Mail, Lock, User, Key, Eye, EyeOff, AlertTriangle, Smartphone } from 'lucide-react';
 
 export const Auth = () => {
   const { login, verifyLoginOTP, register, verifyRegisterOTP } = useAuth();
@@ -240,15 +240,40 @@ export const Auth = () => {
 
         {/* Mode Switch Footer */}
         {step === 'credentials' && (
-          <div style={{ marginTop: '28px', textAlign: 'center', fontSize: '14px', color: 'var(--text-secondary)' }}>
-            {isLogin ? "Don't have an account?" : "Already have an account?"}{' '}
-            <button
-              onClick={toggleAuthMode}
-              style={{ background: 'none', border: 'none', color: 'hsl(var(--accent-indigo))', fontWeight: '700', cursor: 'pointer' }}
-            >
-              {isLogin ? 'Sign Up' : 'Log In'}
-            </button>
-          </div>
+          <>
+            <div style={{ marginTop: '28px', textAlign: 'center', fontSize: '14px', color: 'var(--text-secondary)' }}>
+              {isLogin ? "Don't have an account?" : "Already have an account?"}{' '}
+              <button
+                onClick={toggleAuthMode}
+                style={{ background: 'none', border: 'none', color: 'hsl(var(--accent-indigo))', fontWeight: '700', cursor: 'pointer' }}
+              >
+                {isLogin ? 'Sign Up' : 'Log In'}
+              </button>
+            </div>
+            
+            <div style={{ marginTop: '24px', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
+              <a
+                href="/FinAura.apk"
+                download="FinAura.apk"
+                className="btn btn-secondary"
+                style={{ 
+                  background: 'rgba(48, 209, 88, 0.1)', 
+                  color: 'rgb(var(--apple-green))', 
+                  border: '1px solid rgba(48, 209, 88, 0.15)', 
+                  width: '100%',
+                  textDecoration: 'none',
+                  fontSize: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+              >
+                <Smartphone size={14} />
+                <span>Download Native Android APK</span>
+              </a>
+            </div>
+          </>
         )}
       </div>
     </div>
