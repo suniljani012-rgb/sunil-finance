@@ -377,7 +377,7 @@ const AppContent = () => {
       <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-primary)', color: 'var(--text-secondary)' }}>
         <div style={{ textAlign: 'center' }}>
           <Wallet size={40} style={{ color: 'rgb(var(--apple-blue))', animation: 'pulse 1.2s infinite', margin: '0 auto 12px auto' }} />
-          <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#fff' }}>Connecting FinAura...</h2>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text-primary)' }}>Connecting FinAura...</h2>
           <p style={{ fontSize: '12px', marginTop: '4px' }}>Decrypting secure enterprise node</p>
         </div>
       </div>

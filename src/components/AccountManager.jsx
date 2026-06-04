@@ -158,7 +158,7 @@ export const AccountManager = () => {
                 </div>
 
                 <div style={{ marginTop: '16px' }}>
-                  <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <h4 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {acc.name}
                   </h4>
                   <div style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-secondary)', marginTop: '2px', fontWeight: '600' }}>

@@ -289,7 +289,7 @@ export const Transactions = () => {
               cursor: 'pointer',
               border: '1px solid var(--border-color)',
               background: filterType === btn.id ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.01)',
-              color: filterType === btn.id ? '#fff' : 'var(--text-secondary)',
+              color: filterType === btn.id ? 'var(--text-primary)' : 'var(--text-secondary)',
               borderColor: filterType === btn.id ? 'rgba(255,255,255,0.2)' : 'var(--border-color)',
               outline: 'none',
               transition: 'all var(--transition-fast)'
@@ -335,7 +335,7 @@ export const Transactions = () => {
                   <tr key={tx.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }} className="table-row-hover">
                     {/* Narration */}
                     <td style={{ padding: '14px 20px' }}>
-                      <div style={{ fontWeight: '700', color: '#fff', fontSize: '14px' }}>{tx.description || tx.category}</div>
+                      <div style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '14px' }}>{tx.description || tx.category}</div>
                       {tx.loan_name && (
                         <div style={{ fontSize: '11px', color: 'rgb(var(--apple-blue))', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '3px' }}>
                           <Bookmark size={11} /> Linked Loan: {tx.loan_name} {tx.emi_number ? `(EMI #${tx.emi_number})` : ''}
@@ -356,7 +356,7 @@ export const Transactions = () => {
                     </td>
 
                     {/* Account */}
-                    <td style={{ padding: '14px 20px', fontSize: '13px', color: '#fff', fontWeight: '500' }}>
+                    <td style={{ padding: '14px 20px', fontSize: '13px', color: 'var(--text-primary)', fontWeight: '500' }}>
                       {tx.account_name}
                     </td>
 
@@ -399,16 +399,52 @@ export const Transactions = () => {
                     <td style={{ padding: '14px 20px', textAlign: 'center' }}>
                       <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
                         {isDebt && tx.status === 'pending' && (
-                          <button
-                            onClick={() => {
-                              setRepayTransaction(tx);
-                              setRepayAmount(outstanding);
-                            }}
-                            className="btn"
-                            style={{ padding: '4px 8px', fontSize: '11px', background: 'rgba(48,209,88,0.1)', color: 'rgb(var(--apple-green))', border: '1px solid rgba(48,209,88,0.15)' }}
-                          >
-                            Pay/Repay
-                          </button>
+                          <>
+                            {/* Pay/Settle Action */}
+                            <button
+                              onClick={() => {
+                                setRepayTransaction(tx);
+                                setRepayAmount(outstanding);
+                              }}
+                              className="btn"
+                              style={{ 
+                                padding: '4px 8px', 
+                                fontSize: '11px', 
+                                background: tx.type.endsWith('_given') ? 'rgba(52,199,89,0.1)' : 'rgba(10,132,255,0.1)', 
+                                color: tx.type.endsWith('_given') ? 'rgb(var(--apple-green))' : 'rgb(var(--apple-blue))', 
+                                border: '1px solid var(--border-color)',
+                                fontWeight: '600',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              {tx.type.endsWith('_given') ? 'Collect' : 'Repay'}
+                            </button>
+
+                            {/* WhatsApp Follow-up Reminder */}
+                            {tx.type.endsWith('_given') && (
+                              <a
+                                href={`https://api.whatsapp.com/send?phone=${tx.payee_phone ? tx.payee_phone.replace(/\D/g, '') : ''}&text=${encodeURIComponent(`Hi ${tx.payee_name || 'there'}, a friendly reminder for the pending amount of ₹${outstanding.toLocaleString('en-IN')} for "${tx.description || tx.category_name}" due on ${tx.due_date || 'soon'}. Please settle it at your earliest convenience.`)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="btn"
+                                style={{ 
+                                  padding: '4px 8px', 
+                                  fontSize: '11px', 
+                                  background: 'rgba(37,211,102,0.1)', 
+                                  color: '#25d366', 
+                                  border: '1px solid var(--border-color)',
+                                  textDecoration: 'none',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  fontWeight: '600',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                Remind
+                              </a>
+                            )}
+                          </>
                         )}
                         <button onClick={() => handleDelete(tx.id)} style={{ padding: '6px', background: 'rgba(255,69,58,0.08)', border: 'none', borderRadius: '6px', color: 'rgb(var(--apple-red))', cursor: 'pointer' }}>
                           <Trash2 size={13} />

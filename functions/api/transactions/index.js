@@ -9,6 +9,8 @@ export async function onRequestGet(context) {
       SELECT t.*, 
              COALESCE(a.name, 'Unknown') as account_name,
              COALESCE(p.name, '') as payee_name,
+             p.phone as payee_phone,
+             p.upi_id as payee_upi,
              COALESCE(h.name, t.category) as category_name,
              COALESCE(l.name, '') as loan_name,
              COALESCE((SELECT SUM(pm.amount) FROM payments pm WHERE pm.transaction_id = t.id), 0) as repaid_amount

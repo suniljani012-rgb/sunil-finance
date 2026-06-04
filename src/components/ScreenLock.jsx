@@ -158,9 +158,9 @@ export const ScreenLock = ({ user, onUnlock, forceSetup = false }) => {
   return (
     <div style={{
       position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      background: 'rgba(9, 9, 11, 0.95)', backdropFilter: 'blur(30px)',
+      background: 'var(--bg-primary)', backdropFilter: 'blur(30px)',
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      zIndex: 9999, color: '#fff', userSelect: 'none'
+      zIndex: 9999, color: 'var(--text-primary)', userSelect: 'none'
     }}>
       <div style={{
         width: '100%', maxWidth: '360px', padding: '24px', display: 'flex', flexDirection: 'column',
@@ -190,9 +190,9 @@ export const ScreenLock = ({ user, onUnlock, forceSetup = false }) => {
           {[0, 1, 2, 3].map((index) => (
             <div key={index} style={{
               width: '14px', height: '14px', borderRadius: '50%',
-              background: pin.length > index ? 'rgb(var(--apple-blue))' : 'rgba(255, 255, 255, 0.1)',
+              background: pin.length > index ? 'rgb(var(--apple-blue))' : 'var(--bg-tertiary)',
               border: '1px solid',
-              borderColor: pin.length > index ? 'rgb(var(--apple-blue))' : 'rgba(255, 255, 255, 0.2)',
+              borderColor: pin.length > index ? 'rgb(var(--apple-blue))' : 'var(--border-color)',
               boxShadow: pin.length > index ? '0 0 10px rgba(10, 132, 255, 0.5)' : 'none',
               transition: 'all 0.15s cubic-bezier(0.16, 1, 0.3, 1)'
             }} />
@@ -219,8 +219,8 @@ export const ScreenLock = ({ user, onUnlock, forceSetup = false }) => {
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
             <button key={num} onClick={() => handleKeyPress(num.toString())} style={{
               width: '64px', height: '64px', borderRadius: '50%',
-              background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.08)',
-              color: '#fff', fontSize: '24px', fontWeight: '500', cursor: 'pointer',
+              background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)',
+              color: 'var(--text-primary)', fontSize: '24px', fontWeight: '500', cursor: 'pointer',
               outline: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
               margin: '0 auto', transition: 'background 0.1s'
             }} onMouseDown={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.1)'}
@@ -244,8 +244,8 @@ export const ScreenLock = ({ user, onUnlock, forceSetup = false }) => {
           
           <button onClick={() => handleKeyPress('0')} style={{
             width: '64px', height: '64px', borderRadius: '50%',
-            background: 'rgba(255, 255, 255, 0.04)', border: '1px solid rgba(255, 255, 255, 0.08)',
-            color: '#fff', fontSize: '24px', fontWeight: '500', cursor: 'pointer',
+            background: 'var(--bg-tertiary)', border: '1px solid var(--border-color)',
+            color: 'var(--text-primary)', fontSize: '24px', fontWeight: '500', cursor: 'pointer',
             outline: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
             margin: '0 auto', transition: 'background 0.1s'
           }} onMouseDown={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.1)'}

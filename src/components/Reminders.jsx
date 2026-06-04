@@ -289,7 +289,7 @@ export const Reminders = () => {
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <h4 style={{ fontSize: '16px', fontWeight: '800', color: '#fff' }}>
+              <h4 style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)' }}>
                 {tx.description || tx.category}
               </h4>
               {getUrgencyBadge(urgency)}
@@ -320,12 +320,35 @@ export const Reminders = () => {
             </div>
           </div>
           
+          {isLoanGiven && (
+            <a
+              href={`https://api.whatsapp.com/send?phone=${tx.payee_phone ? tx.payee_phone.replace(/\D/g, '') : ''}&text=${encodeURIComponent(`Hi ${tx.payee_name || 'there'}, a friendly reminder for the pending amount of ₹${outstanding.toLocaleString('en-IN')} for "${tx.description || tx.category}" due on ${tx.due_date || 'soon'}. Please settle it at your earliest convenience.`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn"
+              style={{ 
+                padding: '8px 16px', 
+                fontSize: '13px', 
+                background: 'rgba(37,211,102,0.1)', 
+                color: '#25d366', 
+                border: '1px solid var(--border-color)',
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}
+            >
+              Remind
+            </a>
+          )}
           <button
             onClick={() => setRepayTransaction(tx)}
             className="btn btn-primary"
-            style={{ padding: '8px 16px', fontSize: '13px' }}
+            style={{ padding: '8px 16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px' }}
           >
-            Settle Bill <ChevronRight size={14} />
+            Settle <ChevronRight size={14} />
           </button>
         </div>
 

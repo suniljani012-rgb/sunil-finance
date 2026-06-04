@@ -261,25 +261,25 @@ export const LoanTracker = () => {
                   </div>
                   <div>
                     <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Monthly EMI Amount</div>
-                    <div style={{ fontSize: '16px', fontWeight: '800', color: '#fff', marginTop: '2px' }}>
+                    <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)', marginTop: '2px' }}>
                       ₹{loan.emi_amount.toLocaleString('en-IN')}
                     </div>
                   </div>
                   <div>
                     <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Interest Rate</div>
-                    <div style={{ fontSize: '16px', fontWeight: '800', color: '#fff', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                    <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '2px' }}>
                       <Percent size={13} /> {loan.interest_rate}%
                     </div>
                   </div>
                   <div>
                     <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Tenure Period</div>
-                    <div style={{ fontSize: '16px', fontWeight: '800', color: '#fff', marginTop: '2px' }}>
+                    <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)', marginTop: '2px' }}>
                       {loan.tenure_months} Months
                     </div>
                   </div>
                   <div>
                     <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Start Date</div>
-                    <div style={{ fontSize: '15px', fontWeight: '700', color: '#fff', marginTop: '2px' }}>
+                    <div style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginTop: '2px' }}>
                       {loan.start_date}
                     </div>
                   </div>

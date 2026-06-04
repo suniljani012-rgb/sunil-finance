@@ -9,7 +9,7 @@ const getApiUrl = (path) => {
   const isCapacitor = !!window.Capacitor || 
                       window.location.origin.includes('capacitor://') || 
                       (window.location.hostname === 'localhost' && !window.location.port);
-  const base = isCapacitor ? 'https://sunil-finance.pages.dev' : '';
+  const base = isCapacitor ? 'https://sunil-finance-5y6.pages.dev' : '';
   return `${base}${path}`;
 };
 

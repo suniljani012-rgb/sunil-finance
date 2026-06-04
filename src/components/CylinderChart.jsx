@@ -27,7 +27,7 @@ export const CylinderChart = ({ data = [] }) => {
           return (
             <div key={index} className="cylinder-wrapper" style={{ height: '240px' }}>
               {/* Display Value above */}
-              <div style={{ fontSize: '14px', fontWeight: '8px', color: '#fff', marginBottom: '8px', textAlign: 'center' }}>
+              <div style={{ fontSize: '14px', fontWeight: '8px', color: 'var(--text-primary)', marginBottom: '8px', textAlign: 'center' }}>
                 ₹{item.value.toLocaleString('en-IN')}
               </div>
 

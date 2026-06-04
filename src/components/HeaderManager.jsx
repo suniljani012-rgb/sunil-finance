@@ -170,7 +170,7 @@ export const HeaderManager = () => {
   function renderHeaderBadge(h) {
     return (
       <div key={h.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(255,255,255,0.015)', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
-        <span style={{ fontSize: '13px', fontWeight: '600', color: '#fff' }}>{h.name}</span>
+        <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-primary)' }}>{h.name}</span>
         <button onClick={() => handleDelete(h.id)} style={{ padding: '2px', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }} className="delete-btn-hover">
           <Trash2 size={12} />
         </button>

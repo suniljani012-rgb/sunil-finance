@@ -143,7 +143,7 @@ export const Auth = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '700', marginBottom: '4px' }}>
               <AlertTriangle size={16} /> Dev Mode OTP (Apps Script URL not set)
             </div>
-            Use OTP: <strong style={{ letterSpacing: '2px', fontSize: '16px', color: '#fff' }}>{devOtp}</strong> (autofilled)
+            Use OTP: <strong style={{ letterSpacing: '2px', fontSize: '16px', color: 'var(--text-primary)' }}>{devOtp}</strong> (autofilled)
           </div>
         )}
 

@@ -205,7 +205,7 @@ export const Reports = () => {
           </div>
           <div style={{ flex: 1, minWidth: '150px' }}>
             <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Net Cash Flow</div>
-            <div style={{ fontSize: '22px', fontWeight: '800', color: netFlow >= 0 ? '#fff' : 'rgb(var(--apple-red))', marginTop: '4px' }}>
+            <div style={{ fontSize: '22px', fontWeight: '800', color: netFlow >= 0 ? 'var(--text-primary)' : 'rgb(var(--apple-red))', marginTop: '4px' }}>
               ₹{netFlow.toLocaleString('en-IN')}
             </div>
           </div>
@@ -241,7 +241,7 @@ export const Reports = () => {
                     <td style={{ padding: '12px 20px', fontSize: '13px', color: 'var(--text-secondary)' }}>
                       {tx.due_date || new Date(tx.created_at).toISOString().split('T')[0]}
                     </td>
-                    <td style={{ padding: '12px 20px', fontSize: '14px', fontWeight: '600', color: '#fff' }}>
+                    <td style={{ padding: '12px 20px', fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>
                       {tx.description || tx.category}
                     </td>
                     <td style={{ padding: '12px 20px', fontSize: '11px', textTransform: 'uppercase', fontWeight: 'bold' }}>

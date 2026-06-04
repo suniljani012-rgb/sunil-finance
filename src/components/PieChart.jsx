@@ -80,7 +80,7 @@ export const PieChart = ({ data = [], title = "Distribution" }) => {
               pointerEvents: 'none'
             }}>
               <div style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Total</div>
-              <div style={{ fontSize: '16px', fontWeight: '800', color: '#fff' }}>₹{total.toLocaleString('en-IN')}</div>
+              <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)' }}>₹{total.toLocaleString('en-IN')}</div>
             </div>
           </div>
         )}
@@ -124,7 +124,7 @@ export const PieChart = ({ data = [], title = "Distribution" }) => {
                   display: 'inline-block'
                 }}></span>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '13px', fontWeight: '600', color: isHovered ? '#fff' : 'var(--text-secondary)' }}>{item.label}</div>
+                  <div style={{ fontSize: '13px', fontWeight: '600', color: isHovered ? 'var(--text-primary)' : 'var(--text-secondary)' }}>{item.label}</div>
                   <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>₹{item.value.toLocaleString('en-IN')} ({pct}%)</div>
                 </div>
               </div>

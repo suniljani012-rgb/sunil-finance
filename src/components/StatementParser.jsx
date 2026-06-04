@@ -435,7 +435,7 @@ export const StatementParser = () => {
                           <td style={{ padding: '8px 16px', fontSize: '13px', color: 'var(--text-secondary)' }}>
                             {row.date}
                           </td>
-                          <td style={{ padding: '8px 16px', fontSize: '13px', fontWeight: '500', color: '#fff', maxWidth: '280px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          <td style={{ padding: '8px 16px', fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)', maxWidth: '280px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             {row.description}
                           </td>
                           <td style={{ padding: '8px 16px' }}>
