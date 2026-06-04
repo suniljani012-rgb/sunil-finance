@@ -2,6 +2,17 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 
 const AuthContext = createContext(null);
 
+const getApiUrl = (path) => {
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+  const isCapacitor = !!window.Capacitor || 
+                      window.location.origin.includes('capacitor://') || 
+                      (window.location.hostname === 'localhost' && !window.location.port);
+  const base = isCapacitor ? 'https://sunil-finance.pages.dev' : '';
+  return `${base}${path}`;
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token') || null);
@@ -39,7 +50,7 @@ export const AuthProvider = ({ children }) => {
   }, [token]);
 
   const login = async (email, password) => {
-    const res = await fetch('/api/auth/login', {
+    const res = await fetch(getApiUrl('/api/auth/login'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
@@ -50,7 +61,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const verifyLoginOTP = async (email, otp) => {
-    const res = await fetch('/api/auth/verify-login', {
+    const res = await fetch(getApiUrl('/api/auth/verify-login'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, otp }),
@@ -65,7 +76,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (username, email, password) => {
-    const res = await fetch('/api/auth/register', {
+    const res = await fetch(getApiUrl('/api/auth/register'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, email, password }),
@@ -76,7 +87,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const verifyRegisterOTP = async (email, otp) => {
-    const res = await fetch('/api/auth/verify-otp', {
+    const res = await fetch(getApiUrl('/api/auth/verify-otp'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, otp }),
@@ -123,7 +134,7 @@ export const AuthProvider = ({ children }) => {
         if (currentToken) {
           headers['Authorization'] = `Bearer ${currentToken}`;
         }
-        const res = await fetch(item.url, {
+        const res = await fetch(getApiUrl(item.url), {
           ...item.options,
           headers
         });
@@ -204,7 +215,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      const res = await fetch(url, {
+      const res = await fetch(getApiUrl(url), {
         ...options,
         headers,
       });

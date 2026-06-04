@@ -5,6 +5,10 @@ import { Mail, Lock, User, Key, Eye, EyeOff, AlertTriangle, Smartphone } from 'l
 export const Auth = () => {
   const { login, verifyLoginOTP, register, verifyRegisterOTP } = useAuth();
   
+  const isNative = !!window.Capacitor || 
+                   window.location.origin.includes('capacitor://') || 
+                   (window.location.hostname === 'localhost' && !window.location.port);
+  
   const [isLogin, setIsLogin] = useState(true);
   const [step, setStep] = useState('credentials'); // 'credentials' or 'otp'
   
@@ -251,28 +255,30 @@ export const Auth = () => {
               </button>
             </div>
             
-            <div style={{ marginTop: '24px', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
-              <a
-                href="/FinAura.apk"
-                download="FinAura.apk"
-                className="btn btn-secondary"
-                style={{ 
-                  background: 'rgba(48, 209, 88, 0.1)', 
-                  color: 'rgb(var(--apple-green))', 
-                  border: '1px solid rgba(48, 209, 88, 0.15)', 
-                  width: '100%',
-                  textDecoration: 'none',
-                  fontSize: '12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px'
-                }}
-              >
-                <Smartphone size={14} />
-                <span>Download Native Android APK</span>
-              </a>
-            </div>
+            {!isNative && (
+              <div style={{ marginTop: '24px', borderTop: '1px solid var(--border-color)', paddingTop: '16px' }}>
+                <a
+                  href="/FinAura.apk"
+                  download="FinAura.apk"
+                  className="btn btn-secondary"
+                  style={{ 
+                    background: 'rgba(48, 209, 88, 0.1)', 
+                    color: 'rgb(var(--apple-green))', 
+                    border: '1px solid rgba(48, 209, 88, 0.15)', 
+                    width: '100%',
+                    textDecoration: 'none',
+                    fontSize: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  <Smartphone size={14} />
+                  <span>Download Native Android APK</span>
+                </a>
+              </div>
+            )}
           </>
         )}
       </div>

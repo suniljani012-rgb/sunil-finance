@@ -150,7 +150,7 @@ export async function sendOTPEmail(gasUrl, email, otp, username, type) {
   const url = gasUrl || "https://script.google.com/macros/s/AKfycbwxh5LQLCGtwGflfF7V5HKyL7viFNlAkAbsgz5xEDQo8Eg_f1kw47EjxrzSAC891sm1/exec";
   
   try {
-    const bodyData = JSON.stringify({ email, otp, username, type });
+    const bodyData = JSON.stringify({ email, to: email, otp, username, type });
     const res = await fetch(url, {
       method: "POST",
       headers: { 

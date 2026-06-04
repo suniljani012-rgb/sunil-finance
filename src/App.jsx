@@ -16,6 +16,9 @@ import './App.css';
 const DashboardLayout = () => {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
+  const isNative = !!window.Capacitor || 
+                   window.location.origin.includes('capacitor://') || 
+                   (window.location.hostname === 'localhost' && !window.location.port);
   
   // Theme state
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
@@ -232,24 +235,26 @@ const DashboardLayout = () => {
           )}
 
           {/* Android Native APK direct download link */}
-          <a
-            href="/FinAura.apk"
-            download="FinAura.apk"
-            className="sidebar-item"
-            style={{ 
-              background: 'rgba(48, 209, 88, 0.1)', 
-              color: 'rgb(var(--apple-green))', 
-              border: '1px solid rgba(48, 209, 88, 0.15)', 
-              width: '100%',
-              textDecoration: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px'
-            }}
-          >
-            <Smartphone size={14} />
-            <span>Download Android APK</span>
-          </a>
+          {!isNative && (
+            <a
+              href="/FinAura.apk"
+              download="FinAura.apk"
+              className="sidebar-item"
+              style={{ 
+                background: 'rgba(48, 209, 88, 0.1)', 
+                color: 'rgb(var(--apple-green))', 
+                border: '1px solid rgba(48, 209, 88, 0.15)', 
+                width: '100%',
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px'
+              }}
+            >
+              <Smartphone size={14} />
+              <span>Download Android APK</span>
+            </a>
+          )}
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 4px' }}>
             <div style={{
