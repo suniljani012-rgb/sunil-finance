@@ -220,7 +220,7 @@ const DashboardLayout = () => {
         </div>
 
         {/* User Card & Mobile Install */}
-        <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div className="sidebar-footer" style={{ borderTop: '1px solid var(--border-color)', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
           
           {/* PWA Mobile Installation Promo */}
           {showInstallBtn && (

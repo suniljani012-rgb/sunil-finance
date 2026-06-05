@@ -639,8 +639,9 @@ body.light-theme .more-item-card:hover {
     gap: 8px;
   }
   
-  /* Hide the horizontal menu in sidebar on mobile since we have bottom nav */
-  .sidebar-menu {
+  /* Hide the horizontal menu and footer in sidebar on mobile since we have bottom nav */
+  .sidebar-menu,
+  .sidebar-footer {
     display: none !important;
   }
 }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Fingerprint, Lock, ShieldAlert, Check } from 'lucide-react';
+import { NativeBiometric } from '@capgo/capacitor-native-biometric';
 
 export const ScreenLock = ({ user, onUnlock, forceSetup = false }) => {
   const [pin, setPin] = useState('');
@@ -13,13 +14,26 @@ export const ScreenLock = ({ user, onUnlock, forceSetup = false }) => {
   useEffect(() => {
     // Check if platform biometrics are supported
     const checkBiometrics = async () => {
+      const isCapacitor = !!window.Capacitor || 
+                          window.location.origin.includes('capacitor://') || 
+                          (window.location.hostname === 'localhost' && !window.location.port);
+      if (isCapacitor) {
+        try {
+          const result = await NativeBiometric.isAvailable();
+          setBiometricsAvailable(result.isAvailable);
+          return;
+        } catch (e) {
+          console.warn("Capacitor biometric check failed", e);
+        }
+      }
+
       if (window.PublicKeyCredential && 
           PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
         try {
           const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
           setBiometricsAvailable(available);
         } catch (e) {
-          console.error("Biometrics check failed", e);
+          console.error("WebAuthn check failed", e);
         }
       }
     };
@@ -84,6 +98,34 @@ export const ScreenLock = ({ user, onUnlock, forceSetup = false }) => {
   };
 
   const enrollBiometrics = async (enteredPin) => {
+    const isCapacitor = !!window.Capacitor || 
+                        window.location.origin.includes('capacitor://') || 
+                        (window.location.hostname === 'localhost' && !window.location.port);
+    if (isCapacitor) {
+      try {
+        const verified = await NativeBiometric.verifyIdentity({
+          reason: "Enable biometric access to your Sunil Fin vault",
+          title: "Secure Biometric Setup",
+          subtitle: "Confirm your fingerprint or face lock",
+          description: "Scan to complete biometric enrollment"
+        });
+        if (verified) {
+          localStorage.setItem('biometric_credential_id', 'native_enabled');
+          setBiometricsEnrolled(true);
+          setError('Biometrics (Fingerprint/FaceID) enabled successfully!');
+          setTimeout(() => {
+            setIsSetupMode(false);
+            if (onUnlock) onUnlock();
+          }, 1500);
+        }
+      } catch (e) {
+        console.warn("Capacitor biometric enrollment failed", e);
+        setIsSetupMode(false);
+        if (onUnlock) onUnlock();
+      }
+      return;
+    }
+
     try {
       const challenge = crypto.getRandomValues(new Uint8Array(32));
       const userId = crypto.getRandomValues(new Uint8Array(16));
@@ -128,6 +170,31 @@ export const ScreenLock = ({ user, onUnlock, forceSetup = false }) => {
     const rawIdBase64 = localStorage.getItem('biometric_credential_id');
     if (!rawIdBase64) return;
     
+    const isCapacitor = !!window.Capacitor || 
+                        window.location.origin.includes('capacitor://') || 
+                        (window.location.hostname === 'localhost' && !window.location.port);
+    if (isCapacitor && rawIdBase64 === 'native_enabled') {
+      try {
+        setError('Verifying biometrics...');
+        const verified = await NativeBiometric.verifyIdentity({
+          reason: "Unlock your Sunil Fin vault",
+          title: "Biometric Unlock",
+          subtitle: "Scan your fingerprint or face",
+          description: "Scan to continue into the application"
+        });
+        if (verified) {
+          setError('');
+          if (onUnlock) onUnlock();
+        } else {
+          setError('Biometric authentication failed.');
+        }
+      } catch (e) {
+        console.error("Capacitor biometric verification failed", e);
+        setError('Biometric verification failed. Enter PIN instead.');
+      }
+      return;
+    }
+
     try {
       setError('Verifying biometrics...');
       const challenge = crypto.getRandomValues(new Uint8Array(32));
