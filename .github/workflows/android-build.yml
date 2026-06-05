@@ -62,12 +62,22 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug --stacktrace > build_log.txt 2>&1 || (cat build_log.txt && exit 1)
 
+      # IMPORTANT: APK ko Cloudflare deployment se hata do
+      - name: Remove APK files from deployment
+        run: |
+          find . -name "*.apk" -type f -delete || true
+
+      # Debug
+      - name: Show files larger than 20MB
+        run: |
+          find dist -type f -size +20M || true
+
       - name: Deploy Web Application to Cloudflare Pages
         env:
           CLOUDFLARE_ACCOUNT_ID: "29493b35481a27ab30cdd706187fe0c7"
         run: |
           CF_TOKEN=$(echo "Y2Z1dF8yTFluYzl0ZnJZSVJ3U0pDNWZDd2x6akdxQnE3dTEzU1NEUUE5TFlGN2E4MWJhMDQ=" | base64 --decode)
-          CLOUDFLARE_API_TOKEN=$CF_TOKEN npx -y wrangler pages deploy dist --project-name=sunil-finance --branch=main
+          CLOUDFLARE_API_TOKEN=$CF_TOKEN npx -y wrangler pages deploy dist --project-name=sunil-finance --branch=main --commit-dirty=true
 
       - name: Upload Gradle Build Log
         if: always()
@@ -77,6 +87,7 @@ jobs:
           path: android/build_log.txt
 
       - name: Upload APK Artifact
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: FinAura-app-debug
